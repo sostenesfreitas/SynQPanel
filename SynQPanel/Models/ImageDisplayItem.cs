@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using SkiaSharp;
+using SynQPanel.Infrastructure;
 using System;
 using System.IO;
 
@@ -79,7 +80,32 @@ namespace SynQPanel.Models
                 {
                     SetProperty(ref _rtspUrl, value);
                     OnPropertyChanged(nameof(CalculatedPath));
-                    if (!string.IsNullOrEmpty(previousValue))
+                    if (!string.IsNullOrEmpty(previousValue) && previousValue != value)
+                    {
+                        SynQPanel.Cache.InvalidateImage(previousValue);
+                    }
+
+                }
+            }
+        }
+
+        private string? _httpUrl;
+
+        public string? HttpUrl
+        {
+            get { return _httpUrl; }
+            set
+            {
+                var previousValue = _httpUrl;
+                if (string.IsNullOrEmpty(value)
+                     || value.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                     || value.StartsWith("https://"))
+                {
+                    SetProperty(ref _httpUrl, value);
+                    OnPropertyChanged(nameof(CalculatedPath));
+
+                    // Only invalidate if URL actually changed
+                    if (!string.IsNullOrEmpty(previousValue) && previousValue != value)
                     {
                         SynQPanel.Cache.InvalidateImage(previousValue);
                     }
@@ -87,8 +113,9 @@ namespace SynQPanel.Models
             }
         }
 
-        private string? _httpUrl;
 
+
+        /*
         public string? HttpUrl
         {
             get { return _httpUrl; }
@@ -109,6 +136,7 @@ namespace SynQPanel.Models
                 }
             }
         }
+        */
 
         public string? CalculatedPath
         {
@@ -128,9 +156,7 @@ namespace SynQPanel.Models
                 {
                     if (FilePath != null)
                     {
-                        return Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                            "SynQPanel", "assets", ProfileGuid.ToString(), FilePath);
+                        return Path.Combine(AppPaths.Assets, ProfileGuid.ToString(), FilePath);
                     }
                     else
                     {

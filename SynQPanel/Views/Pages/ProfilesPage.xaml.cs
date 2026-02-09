@@ -1,4 +1,5 @@
 ﻿using SkiaSharp;
+using SynQPanel.Infrastructure;
 using SynQPanel.Models;
 using SynQPanel.Utils;
 using SynQPanel.ViewModels;
@@ -127,78 +128,6 @@ namespace SynQPanel.Views.Pages
 
 
 
-
-
-
-        /*
-        private async void ButtonImportProfile_Click(object sender, RoutedEventArgs e)
-        {
-            Microsoft.Win32.OpenFileDialog openFileDialog = new()
-            {
-                Multiselect = false,
-                //Filter = "SensorPanel Files (*.sensorpanel)|*.sensorpanel|RemoteSensor LCD Files (*.rslcd)|*.rslcd|AIDA SPZIP Files (*.spzip)|*.spzip",
-                Filter = "All Supported Files (*.sensorpanel;*.rslcd;*.spzip)|*.sensorpanel;*.rslcd;*.spzip|SensorPanel Files (*.sensorpanel)|*.sensorpanel|RemoteSensor LCD Files (*.rslcd)|*.rslcd|AIDA SPZIP Files (*.spzip)|*.spzip",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer)
-            };
-            if (openFileDialog.ShowDialog() == true)
-            {
-                string file = openFileDialog.FileName;
-                if (file.EndsWith(".sensorpanel", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".rslcd", StringComparison.OrdinalIgnoreCase))
-                {
-                    await SharedModel.ImportSensorPanel(file);
-                    _snackbarService.Show("Panel Imported", file, ControlAppearance.Success, null, TimeSpan.FromSeconds(3));
-                }
-                else if (file.EndsWith(".spzip", StringComparison.OrdinalIgnoreCase))
-                {
-                    string tempFolder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "SynQPanelSpzip_" + Guid.NewGuid());
-                    Directory.CreateDirectory(tempFolder);
-
-                    System.IO.Compression.ZipFile.ExtractToDirectory(file, tempFolder);
-
-                    string sp2File = Directory.GetFiles(tempFolder, "*.sp2").FirstOrDefault();
-                    if (sp2File != null)
-                    {
-                        await SharedModel.ImportSensorPanel(sp2File); // This creates and registers the Profile!
-
-                        // Get newly added profile (assuming it's the most recently added one)
-                        var profile = SharedModel.Instance.SelectedProfile;
-                        if (profile != null)
-                        {
-                            var assetFolder = Path.Combine(
-                                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                "SynQPanel", "assets", profile.Guid.ToString());
-
-                            if (!Directory.Exists(assetFolder))
-                                Directory.CreateDirectory(assetFolder);
-
-                            // Copy all image files (.png/.jpg/etc) from tempFolder to assetFolder
-                            string[] validExtensions = { ".png", ".jpg", ".jpeg", ".bmp", ".gif" };
-                            foreach (var imgFile in Directory.GetFiles(tempFolder))
-                            {
-                                if (validExtensions.Contains(Path.GetExtension(imgFile).ToLowerInvariant()))
-                                {
-                                    string destPath = Path.Combine(assetFolder, Path.GetFileName(imgFile));
-                                    File.Copy(imgFile, destPath, true); // Overwrite=true
-                                }
-                            }
-                        }
-
-                        _snackbarService.Show("SPZIP Panel Imported", file, ControlAppearance.Success, null, TimeSpan.FromSeconds(3));
-                    }
-                    else
-                    {
-                        _snackbarService.Show("SPZIP Import Failed", "No .sp2 panel found!", ControlAppearance.Danger, null, TimeSpan.FromSeconds(5));
-                        Directory.Delete(tempFolder, true);
-                    }
-                }
-                else
-                {
-                    _snackbarService.Show("Unknown File Type", file, ControlAppearance.Danger, null, TimeSpan.FromSeconds(5));
-                }
-            }
-        }
-        */
-
         private async void ButtonImportProfile_Click(object sender, RoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog openFileDialog = new()
@@ -299,9 +228,7 @@ namespace SynQPanel.Views.Pages
 
 
                         // AFTER saving, list files in profile asset folder for visibility
-                        var assetFolderLocal = Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                            "SynQPanel", "assets", profile.Guid.ToString());
+                        var assetFolderLocal = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
 
                         if (Directory.Exists(assetFolderLocal))
                         {
@@ -321,9 +248,7 @@ namespace SynQPanel.Views.Pages
 
                         if (imageNames.Count > 0)
                         {
-                            string assetFolder = Path.Combine(
-                                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                "SynQPanel", "assets", profile.Guid.ToString());
+                            string assetFolder = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
 
                             // 1) Try to find the LCARS 1024x600 BG by a "smart" filename match
                             string bestBgName = imageNames
@@ -520,7 +445,7 @@ namespace SynQPanel.Views.Pages
                     }
 
                     // Permanent asset folder for this profile (GUID-based)
-                    string profileAssetRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SynQPanel", "assets", profile.Guid.ToString());
+                    string profileAssetRoot = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
                     Directory.CreateDirectory(profileAssetRoot);
 
                     // Step C: move the sp2 into the profile folder (if an identical file exists, keep it)
@@ -816,10 +741,15 @@ namespace SynQPanel.Views.Pages
                 {
                     try
                     {
-                        if (di is ISensorItem sensorItem) // covers sensor-like items
+                        // 🔴 Do NOT remap gauges here; they were already mapped during panel import
+                        if (di is GaugeDisplayItem)
+                            continue;
+
+                        if (di is ISensorItem sensorItem) // covers other sensor-like items
                         {
-                            // prefer SensorName or Name depending on concrete type
                             string panelSensorKey = string.Empty;
+
+                            // prefer SensorName or Name depending on concrete type
                             try
                             {
                                 var prop = sensorItem.GetType().GetProperty("SensorName");
@@ -829,9 +759,8 @@ namespace SynQPanel.Views.Pages
                                     if (val != null) panelSensorKey = val.ToString() ?? string.Empty;
                                 }
                             }
-                            catch { /* ignore reflection issues */ }
+                            catch { }
 
-                            // fallback to DisplayItem.Name
                             if (string.IsNullOrWhiteSpace(panelSensorKey) && di is DisplayItem diBase && !string.IsNullOrWhiteSpace(diBase.Name))
                                 panelSensorKey = diBase.Name;
 
@@ -840,10 +769,8 @@ namespace SynQPanel.Views.Pages
                                 var matched = SensorMapping.FindMatchingIdentifier(panelSensorKey);
                                 if (!string.IsNullOrWhiteSpace(matched))
                                 {
-                                    // set plugin mapping in a safe, non-breaking way
                                     try
                                     {
-                                        // Many sensor display types expose PluginSensorId and SensorType
                                         var pIdProp = sensorItem.GetType().GetProperty("PluginSensorId");
                                         if (pIdProp != null && pIdProp.PropertyType == typeof(string))
                                         {
@@ -853,13 +780,12 @@ namespace SynQPanel.Views.Pages
                                         var stProp = sensorItem.GetType().GetProperty("SensorType");
                                         if (stProp != null)
                                         {
-                                            // set to Plugin enum value
                                             var enumType = stProp.PropertyType;
                                             var pluginEnum = Enum.Parse(enumType, "Plugin");
                                             stProp.SetValue(sensorItem, pluginEnum);
                                         }
                                     }
-                                    catch { /* ignore reflection issues */ }
+                                    catch { }
                                 }
                             }
                         }
@@ -870,13 +796,14 @@ namespace SynQPanel.Views.Pages
                     }
                 }
 
+
                 // 8) Save display items back via the public wrapper
                 SharedModel.Instance.SaveDisplayItemsForProfile(profile, displayItems);
 
                 // 9) Copy assets into LocalAppData\SynQPanel\assets\{guid}\
                 if (Directory.Exists(assetsFolder))
                 {
-                    string destAssetFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SynQPanel", "assets", profile.Guid.ToString());
+                    string destAssetFolder = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
                     Directory.CreateDirectory(destAssetFolder);
 
                     foreach (var file in Directory.GetFiles(assetsFolder))
@@ -957,8 +884,8 @@ namespace SynQPanel.Views.Pages
 
                     // Create the GUID asset folder
                     string profileAssetRoot =
-                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                        "SynQPanel", "assets", profile.Guid.ToString());
+                        Path.Combine(
+                        AppPaths.Assets, profile.Guid.ToString());
                     Directory.CreateDirectory(profileAssetRoot);
 
                     // Copy Profile.xml into the GUID asset folder (this one was NOT copied earlier)
@@ -1264,8 +1191,7 @@ namespace SynQPanel.Views.Pages
         private static string SaveEmbeddedImage(Guid profileGuid, string fileName, string hexData)
         {
             string assetsRoot = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "SynQPanel", "assets", profileGuid.ToString());
+            AppPaths.Assets, profileGuid.ToString());
 
             if (!Directory.Exists(assetsRoot))
                 Directory.CreateDirectory(assetsRoot);
@@ -1320,8 +1246,7 @@ namespace SynQPanel.Views.Pages
         {
             // Resolve full path to the asset
             var assetFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "SynQPanel", "assets", profile.Guid.ToString());
+            AppPaths.Assets, profile.Guid.ToString());
 
             var fullPath = Path.Combine(assetFolder, fileName);
 
@@ -1563,8 +1488,7 @@ namespace SynQPanel.Views.Pages
 
             // Target folder: %LOCALAPPDATA%/SynQPanel/assets/{guid}/
             string targetFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "SynQPanel", "assets", profile.Guid.ToString());
+            AppPaths.Assets, profile.Guid.ToString());
 
             if (!Directory.Exists(targetFolder))
                 Directory.CreateDirectory(targetFolder);

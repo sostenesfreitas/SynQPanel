@@ -1,11 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Serilog;
+using SkiaSharp;
 using SynQPanel.Aida;
 using SynQPanel.Drawing;
 using SynQPanel.Extensions;
+using SynQPanel.Infrastructure;
 using SynQPanel.Models;
 using SynQPanel.Utils;
-using Serilog;
-using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -592,7 +593,7 @@ namespace SynQPanel
                 // Minimal entry log (file append). Keep as small as possible to avoid heavy IO.
                 try
                 {
-                    var dbgPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SynQPanel", "synqpanel_debug.log");
+                    var dbgPath = Path.Combine(AppPaths.DataRoot, "synqpanel_debug.log");
                     Directory.CreateDirectory(Path.GetDirectoryName(dbgPath) ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
                     File.AppendAllText(dbgPath, $"[SaveDisplayItems] Enter - profile='{profile?.Name}' GUID={profile?.Guid} items={displayItems?.Count ?? 0} {DateTime.Now:O}{Environment.NewLine}");
                 }
@@ -620,6 +621,63 @@ namespace SynQPanel
                 }
 
                 DevTrace.Write($"[SaveDisplayItems] Saved DisplayItems local XML for profile {profile.Guid}.");
+
+
+                // =====================================================
+                // FlipDisplayItem – Save-stage asset copy (Image-style)
+                // =====================================================
+                try
+                {
+                    string profileAssetRoot =
+                        Path.Combine(AppPaths.Assets, profile.Guid.ToString());
+
+                    Directory.CreateDirectory(profileAssetRoot);
+
+                    foreach (var flip in displayItems.OfType<FlipDisplayItem>())
+                    {
+                        if (string.IsNullOrWhiteSpace(flip.ImageFolder))
+                            continue;
+
+                        // Resolve actual folder (absolute or AppData-relative)
+                        string sourceFolder = flip.CalculatedImageFolder;
+
+                        if (!Directory.Exists(sourceFolder))
+                            continue;
+
+                        foreach (var file in Directory.GetFiles(sourceFolder))
+                        {
+                            var ext = Path.GetExtension(file).ToLowerInvariant();
+
+                            if (ext is not (
+                                ".png" or ".jpg" or ".jpeg" or ".bmp" or
+                                ".gif" or ".webp" or ".apng" or ".svg"))
+                                continue;
+
+                            string dest = Path.Combine(
+                                profileAssetRoot,
+                                Path.GetFileName(file)
+                            );
+
+                            // Same behavior as Image / Gauge
+                            if (!File.Exists(dest))
+                            {
+                                File.Copy(file, dest, overwrite: false);
+                            }
+                        }
+
+                        // 🚫 DO NOT rewrite flip.ImageFolder
+                        // 🚫 DO NOT create subfolders
+                        // 🚫 DO NOT add GUIDs
+                    }
+                }
+                catch (Exception ex)
+                {
+                    DevTrace.Write($"[SaveDisplayItems] Flip asset copy failed: {ex.Message}");
+                }
+
+
+
+
 
                 // --- round-trip: panel save + package re-export for .spzip and .sqx ---
                 try
@@ -655,6 +713,13 @@ namespace SynQPanel
                             DevTrace.Write($"[SaveDisplayItems] Error saving panel: {exPanel.Message}");
                         }
                     }
+
+
+                    
+
+
+
+
 
                     // 2) If package path exists, handle package-specific re-exports (SPZIP, SQX)
                     if (!string.IsNullOrWhiteSpace(profile?.ImportedSensorPackagePath))
@@ -718,7 +783,7 @@ namespace SynQPanel
                             try
                             {
                                 // Ensure GUID asset folder exists
-                                string profileAssetRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SynQPanel", "assets", profile.Guid.ToString());
+                                string profileAssetRoot = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
                                 Directory.CreateDirectory(profileAssetRoot);
 
                                 // 1) If ImportedSensorPanelPath points to a GUID-local Profile.xml, write the Profile.xml there.
@@ -793,6 +858,11 @@ namespace SynQPanel
                                 {
                                     DevTrace.Write($"[SaveDisplayItems] Warning: failed copying DisplayItems.xml into assets: {exCopyDI.Message}");
                                 }
+
+
+
+
+
 
                                 // 3) Persist Profile.xml into the GUID assets folder (do not modify original package)
                                 //    Prefer writing to an existing GUID-local profile file if ImportedSensorPanelPath pointed to it,
@@ -890,6 +960,56 @@ namespace SynQPanel
         /// </summary>
         public string? ExportProfileAsSqx_UsingSpzip(Profile profile, string targetPath)
         {
+
+            List<DisplayItem> displayItems;
+            try
+            {
+                var profilesFolder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "SynQPanel",
+                    "profiles"
+                );
+
+                var displayItemsPath = Path.Combine(
+                    profilesFolder,
+                    profile.Guid + ".xml"
+                );
+
+                if (!File.Exists(displayItemsPath))
+                    throw new FileNotFoundException("DisplayItems.xml not found", displayItemsPath);
+
+                var xs = new XmlSerializer(
+                    typeof(List<DisplayItem>),
+                    new Type[]
+                    {
+                    typeof(GroupDisplayItem),
+                    typeof(BarDisplayItem),
+                    typeof(GraphDisplayItem),
+                    typeof(DonutDisplayItem),
+                    typeof(TableSensorDisplayItem),
+                    typeof(SensorDisplayItem),
+                    typeof(TextDisplayItem),
+                    typeof(ClockDisplayItem),
+                    typeof(CalendarDisplayItem),
+                    typeof(SensorImageDisplayItem),
+                    typeof(ImageDisplayItem),
+                    typeof(HttpImageDisplayItem),
+                    typeof(GaugeDisplayItem),
+                    typeof(ShapeDisplayItem),
+                    typeof(FlipDisplayItem) // IMPORTANT
+                    });
+
+                using var fs = File.OpenRead(displayItemsPath);
+                displayItems = (List<DisplayItem>)xs.Deserialize(fs)!;
+            }
+            catch (Exception ex)
+            {
+                DevTrace.Write($"[ExportProfileAsSqx] Failed to load DisplayItems: {ex.Message}");
+                return null;
+            }
+
+
+
             if (profile == null) return null;
 
             string tempRoot = Path.Combine(Path.GetTempPath(), "SynQPanel_SQX_Export_" + Guid.NewGuid().ToString("N"));
@@ -954,8 +1074,7 @@ namespace SynQPanel
                 // 4b) Copy from profile's asset folder into stagingAssets, but FILTER out textual files & backups
                 try
                 {
-                    string profileAssetFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                                             "SynQPanel", "assets", profile.Guid.ToString());
+                    string profileAssetFolder = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
                     if (Directory.Exists(profileAssetFolder))
                     {
                         // Accept only known asset extensions (images/videos/etc.)
@@ -986,6 +1105,53 @@ namespace SynQPanel
                                 DevTrace.Write($"[ExportProfileAsSqx] Warning copying asset '{file}': {exCopy.Message}");
                             }
                         }
+
+                        foreach (var flip in displayItems.OfType<FlipDisplayItem>())
+                        {
+                            if (string.IsNullOrWhiteSpace(flip.ImageFolder))
+                                continue;
+
+                            var sourceFolder = flip.CalculatedImageFolder;
+                            if (!Directory.Exists(sourceFolder))
+                            {
+                                DevTrace.Write($"[ExportProfileAsSqx] Flip image folder not found: {flip.ImageFolder}");
+                                continue;
+                            }
+
+                            foreach (var img in Directory.GetFiles(sourceFolder))
+                            {
+                                var ext = Path.GetExtension(img);
+                                if (!validExts.Contains(ext)) continue;
+
+                                var dest = Path.Combine(stagingAssets, Path.GetFileName(img));
+                                File.Copy(img, dest, overwrite: true);
+                            }
+                        }
+
+                        // ORIGINAL
+                        /*
+
+                        foreach (var flip in displayItems.OfType<FlipDisplayItem>())
+                        {
+                            if (string.IsNullOrWhiteSpace(flip.ImageFolder))
+                                continue;
+
+                            if (!Directory.Exists(flip.CalculatedImageFolder))
+                            {
+                                DevTrace.Write($"[ExportProfileAsSqx] Flip image folder not found: {flip.ImageFolder}");
+                                continue;
+                            }
+
+                            foreach (var img in Directory.GetFiles(flip.ImageFolder))
+                            {
+                                var ext = Path.GetExtension(img);
+                                if (!validExts.Contains(ext)) continue;
+
+                                var dest = Path.Combine(stagingAssets, Path.GetFileName(img));
+                                File.Copy(img, dest, overwrite: true);
+                            }
+                        }
+                        */
                     }
                 }
                 catch { /* ignore profile-asset copy errors - fallback handled earlier */ }
@@ -1054,11 +1220,6 @@ namespace SynQPanel
             }
         }
 
-
-
-
-
-
         public string? ExportProfile(Profile profile, string outputFolder)
         {
             var SelectedProfile = profile;
@@ -1105,7 +1266,7 @@ namespace SynQPanel
                     }
 
                     //add assets
-                    var assetFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SynQPanel", "assets", SelectedProfile.Guid.ToString());
+                    var assetFolder = Path.Combine(AppPaths.Assets, SelectedProfile.Guid.ToString());
 
                     if (Directory.Exists(assetFolder))
                     {
@@ -1122,8 +1283,6 @@ namespace SynQPanel
 
             return null;
         }
-
-
 
         public static async Task ImportSensorPanel(string importPath)
         {
@@ -1398,9 +1557,6 @@ namespace SynQPanel
                     
                 }
 
-
-
-
                 for (int i = 2; i < items.Count; i++)
                 {
                     var item = items[i];
@@ -1610,15 +1766,31 @@ namespace SynQPanel
                             .TrimStart('-')
                             .Trim();
 
-                        // Robust AIDA sensor finding: match ID or LABEL, case-insensitive
-                        string aidaSensorId = "unknown";
-                        var aidaSensor = AidaMonitor.LatestSensors
-                            .FirstOrDefault(s => string.Equals(s.Id, panelSensorKey, StringComparison.OrdinalIgnoreCase)
-                                              || string.Equals(s.Label, panelSensorKey, StringComparison.OrdinalIgnoreCase));
-                        if (aidaSensor != null)
+                        // Prefer explicit AIDA mapping via SensorMapping
+                        string aidaSensorId;
+
+                        // 1) Try explicit/heuristic map first (respects FCPU, TCPU etc.)
+                        var mappedId = SynQPanel.Utils.SensorMapping.FindMatchingIdentifier(panelSensorKey);
+                        if (!string.IsNullOrWhiteSpace(mappedId))
                         {
-                            aidaSensorId = aidaSensor.Id;
+                            aidaSensorId = mappedId;
                         }
+                        else
+                        {
+                            // 2) Fallback: direct LatestSensors match by Id or Label (your original logic)
+                            aidaSensorId = "unknown";
+                            var aidaSensor = AidaMonitor.LatestSensors
+
+                                 .FirstOrDefault(s =>
+                                    string.Equals(s.Id, panelSensorKey, StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(s.Label, panelSensorKey, StringComparison.OrdinalIgnoreCase));
+
+                            if (aidaSensor != null)
+                            {
+                                aidaSensorId = aidaSensor.Id;
+                            }
+                        }
+
 
                         // Create gauge display item in all cases (custom images OR fallback visual)
                         GaugeDisplayItem gaugeDisplayItem = new(LBL, profile, aidaSensorId)
@@ -1706,12 +1878,13 @@ namespace SynQPanel
 
 
                         // Allow STIME to behave as a virtual numeric sensor
-                        if (aidaSensor != null)
+                        if (!string.Equals(aidaSensorId, "unknown", StringComparison.OrdinalIgnoreCase))
                         {
                             gaugeDisplayItem.SensorType = SynQPanel.Enums.SensorType.Plugin;
                             gaugeDisplayItem.PluginSensorId = aidaSensorId;
                         }
-                        
+
+
                         // attach provenance
                         AttachProvenance(gaugeDisplayItem, item);
 
@@ -1756,9 +1929,7 @@ namespace SynQPanel
                             await FileUtil.SaveAsset(profile, IMGFIL, data);
 
                             // Compute where that file lives on disk (SaveAsset should have used per-profile folder)
-                            string assetsRoot = Path.Combine(
-                                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                "SynQPanel", "assets", profile.Guid.ToString());
+                            string assetsRoot = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
 
                             if (!Directory.Exists(assetsRoot))
                                 Directory.CreateDirectory(assetsRoot);
@@ -2327,9 +2498,7 @@ namespace SynQPanel
                         Directory.CreateDirectory(tempFolder);
                         System.IO.Compression.ZipFile.ExtractToDirectory(importPath, tempFolder);
 
-                        var assetFolder = Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                            "SynQPanel", "assets", Guid.NewGuid().ToString() // Use profile.Guid.ToString() if profile exists!
+                        var assetFolder = Path.Combine(AppPaths.Assets, Guid.NewGuid().ToString() // Use profile.Guid.ToString() if profile exists!
                         );
                         if (!Directory.Exists(assetFolder))
                         {
@@ -2483,9 +2652,7 @@ namespace SynQPanel
 
             try
             {
-                var assetsRoot = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "SynQPanel", "assets", profile.Guid.ToString());
+                var assetsRoot = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
 
                 if (!Directory.Exists(assetsRoot))
                     Directory.CreateDirectory(assetsRoot);
