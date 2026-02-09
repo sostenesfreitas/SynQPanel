@@ -40,6 +40,48 @@
                 FontWeight="SemiBold"
                 Margin="0,0,0,10" />
 
+            <!-- Width & Height (side by side with NumberBox) -->
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Margin="0,0,0,0">
+                    <ui:NumberBox
+                        Margin="0,0,0,0"
+                        FontSize="14"
+                        MaxDecimalPlaces="0"
+                        Maximum="2000"
+                        Minimum="1"
+                        SmallChange="1"
+                        Text="{Binding Width}"
+                        Value="{Binding Width}" />
+                    <TextBlock
+                        Margin="5,0,0,0"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextFillColorDisabledBrush}"
+                        Text="Width" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                    <ui:NumberBox
+                        Margin="0,0,0,0"
+                        FontSize="14"
+                        MaxDecimalPlaces="0"
+                        Maximum="2000"
+                        Minimum="1"
+                        SmallChange="1"
+                        Text="{Binding Height}"
+                        Value="{Binding Height}" />
+                    <TextBlock
+                        Margin="5,0,0,0"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextFillColorDisabledBrush}"
+                        Text="Height" />
+                </StackPanel>
+            </Grid>
+
             <!-- Image Folder -->
             <Grid Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>

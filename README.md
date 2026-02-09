@@ -237,7 +237,7 @@ SynQPanel is an independent project and is **not affiliated with or endorsed by 
     <a href="https://forums.aida64.com/topic/22019-introducing-synqpanel/">Forum Discussion</a>
   </p>
 </div>
-```
+
 
 ---
 
