@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/synqpanel-logo.png" alt="SynQPanel Logo" width="180"/>
+  <img src="docs/images/synqpanel-logo.png" alt="SynQPanel Logo" width="90"/>
   
   <h1>SynQPanel</h1>
   <p><strong>Panel-Based Visualization for AIDA64</strong></p>
