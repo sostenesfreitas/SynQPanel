@@ -182,12 +182,14 @@ namespace SynQPanel
 
         private async void Settings_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.AutoStart))
+            // FIX: Listen for AutoStartDelay changes as well
+            if (e.PropertyName == nameof(Settings.AutoStart) ||
+                e.PropertyName == nameof(Settings.AutoStartDelay))
             {
+                // This will update the Windows Task Scheduler with the new Delay
                 ValidateStartup();
             }
-           
-                       else if (e.PropertyName == nameof(Settings.WebServer))
+            else if (e.PropertyName == nameof(Settings.WebServer))
             {
                 if (Settings.WebServer)
                 {
@@ -198,10 +200,11 @@ namespace SynQPanel
                     await WebServerTask.Instance.StopAsync();
                 }
             }
-          
 
+            // The value is saved to your config file immediately
             await SaveSettingsAsync();
         }
+
 
         public List<Profile> GetProfilesCopy()
         {

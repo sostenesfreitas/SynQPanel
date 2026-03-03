@@ -654,7 +654,6 @@ namespace SynQPanel.Views.Pages
             string tempFolder = Path.Combine(Path.GetTempPath(), "SynQPanelSqx_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempFolder);
 
-            // Keep temp when DevTrace.Enabled is true (for debugging)
             bool keepTempForDebug = DevTrace.Enabled;
 
             try
@@ -665,7 +664,6 @@ namespace SynQPanel.Views.Pages
             {
                 _snackbarService.Show("Import Failed", $"Unable to extract SQX: {ex.Message}",
                     ControlAppearance.Danger, null, TimeSpan.FromSeconds(5));
-                // extraction failed — nothing to clean beyond tempFolder which may be empty; try cleanup now
                 if (!keepTempForDebug)
                 {
                     try { DeleteDirectoryWithRetries(tempFolder); } catch { }
@@ -673,7 +671,6 @@ namespace SynQPanel.Views.Pages
                 return;
             }
 
-            // --- MAIN IMPORT WORK: wrap the rest in try/catch/finally so finally can cleanup tempFolder ---
             try
             {
                 // 2) Validate expected files
@@ -704,17 +701,11 @@ namespace SynQPanel.Views.Pages
                     return;
                 }
 
-                if (profile == null)
-                {
-                    _snackbarService.Show("Import Failed", "Invalid Profile.xml content",
-                        ControlAppearance.Danger, null, TimeSpan.FromSeconds(5));
-                    return;
-                }
+                if (profile == null) return;
 
                 // 4) New GUID + mark imported
                 profile.Guid = Guid.NewGuid();
-               //profile.Name = "[Import] " + profile.Name;
-               profile.Name = profile.Name;
+                profile.Name = profile.Name;
 
                 // 5) Copy DisplayItems.xml into local profiles folder
                 string profileFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SynQPanel", "profiles");
@@ -722,8 +713,23 @@ namespace SynQPanel.Views.Pages
                 string profilePath = Path.Combine(profileFolder, profile.Guid + ".xml");
                 File.Copy(displayItemsXml, profilePath, overwrite: true);
 
+                // =========================================================================
+                // FIX 1: COPY ASSETS BEFORE LOADING ITEMS
+                // This ensures that when items load in Step 6, the image paths resolve correctly
+                // =========================================================================
+                if (Directory.Exists(assetsFolder))
+                {
+                    string destAssetFolder = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
+                    Directory.CreateDirectory(destAssetFolder);
+
+                    foreach (var file in Directory.GetFiles(assetsFolder))
+                    {
+                        string dest = Path.Combine(destAssetFolder, Path.GetFileName(file));
+                        File.Copy(file, dest, overwrite: true);
+                    }
+                }
+
                 // 6) Load display items using public wrapper
-                //    (this calls the internal reader that turns the DisplayItems.xml into DisplayItem objects)
                 List<DisplayItem> displayItems;
                 try
                 {
@@ -736,20 +742,23 @@ namespace SynQPanel.Views.Pages
                     return;
                 }
 
-                // 7) AIDA mapping — set PluginSensorId + SensorType rather than assigning to numeric Id
+                // 7) AIDA mapping
                 foreach (var di in displayItems)
                 {
                     try
                     {
-                        // 🔴 Do NOT remap gauges here; they were already mapped during panel import
-                        if (di is GaugeDisplayItem)
-                            continue;
+                        if (di is GaugeDisplayItem) continue;
 
-                        if (di is ISensorItem sensorItem) // covers other sensor-like items
+                        if (di is ISensorItem sensorItem)
                         {
-                            string panelSensorKey = string.Empty;
+                            var pIdPropExisting = sensorItem.GetType().GetProperty("PluginSensorId");
+                            if (pIdPropExisting != null && pIdPropExisting.PropertyType == typeof(string))
+                            {
+                                var existingId = pIdPropExisting.GetValue(sensorItem) as string;
+                                if (!string.IsNullOrWhiteSpace(existingId)) continue;
+                            }
 
-                            // prefer SensorName or Name depending on concrete type
+                            string panelSensorKey = string.Empty;
                             try
                             {
                                 var prop = sensorItem.GetType().GetProperty("SensorName");
@@ -773,9 +782,7 @@ namespace SynQPanel.Views.Pages
                                     {
                                         var pIdProp = sensorItem.GetType().GetProperty("PluginSensorId");
                                         if (pIdProp != null && pIdProp.PropertyType == typeof(string))
-                                        {
                                             pIdProp.SetValue(sensorItem, matched);
-                                        }
 
                                         var stProp = sensorItem.GetType().GetProperty("SensorType");
                                         if (stProp != null)
@@ -790,139 +797,66 @@ namespace SynQPanel.Views.Pages
                             }
                         }
                     }
-                    catch
-                    {
-                        // non-fatal per-item mapping errors should not abort whole import
-                    }
+                    catch { }
                 }
 
+                // =========================================================================
+                // FIX 2: PASS false TO AVOID DECIMAL NORMALISATION
+                // =========================================================================
+                SharedModel.Instance.SaveDisplayItemsForProfile(profile, displayItems, false); // <-- ADDED false HERE
+                                                                                               // (Note: Ensure the public wrapper `SaveDisplayItemsForProfile` accepts the bool flag if it doesn't already)
 
-                // 8) Save display items back via the public wrapper
-                SharedModel.Instance.SaveDisplayItemsForProfile(profile, displayItems);
-
-                // 9) Copy assets into LocalAppData\SynQPanel\assets\{guid}\
-                if (Directory.Exists(assetsFolder))
-                {
-                    string destAssetFolder = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
-                    Directory.CreateDirectory(destAssetFolder);
-
-                    foreach (var file in Directory.GetFiles(assetsFolder))
-                    {
-                        string dest = Path.Combine(destAssetFolder, Path.GetFileName(file));
-                        File.Copy(file, dest, overwrite: true);
-                    }
-                }
-
-
-                // 9a) ------------ Minimal provenance persistence (safe, non-invasive) -------------
+                // 9a) Minimal provenance persistence
                 try
                 {
-                    // Persist a copy of Profile.xml (from tempFolder/Profile.xml) into the profiles folder (not into assets)
                     string profilesFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SynQPanel", "profiles");
                     Directory.CreateDirectory(profilesFolder);
-
-                    // We already wrote DisplayItems.xml into profiles earlier as profilePath (profile.Guid + ".xml")
-                    // Persist Profile.xml as {GUID}.Profile.xml so both textual sources are available later.
                     string persistedProfileXml = Path.Combine(profilesFolder, profile.Guid.ToString() + ".Profile.xml");
 
-                    try
+                    if (File.Exists(profileXml))
                     {
-                        if (File.Exists(profileXml))
-                        {
-                            File.Copy(profileXml, persistedProfileXml, overwrite: true);
-                        }
-                        else
-                        {
-                            // Fallback: serialize in-memory profile to persistedProfileXml
-                            var xs = new XmlSerializer(typeof(Profile));
-                            using var fs = File.Create(persistedProfileXml);
-                            xs.Serialize(fs, profile);
-                        }
+                        File.Copy(profileXml, persistedProfileXml, overwrite: true);
                     }
-                    catch (Exception exCopy)
+                    else
                     {
-                        DevTrace.Write($"[SQX Import] Warning: failed copying Profile.xml into profiles folder: {exCopy.Message}");
+                        var xs = new XmlSerializer(typeof(Profile));
+                        using var fs = File.Create(persistedProfileXml);
+                        xs.Serialize(fs, profile);
                     }
 
-                    // Record provenance so later Save/Export can pick up the correct paths
-                    try
-                    {
-                        profile.ImportedSensorPanelPath = persistedProfileXml; // textual panel source for round-trip saves
-                        profile.ImportedSensorPackagePath = sqxFile;           // original .sqx package path user opened
-                    }
-                    catch (Exception exProv)
-                    {
-                        DevTrace.Write($"[SQX Import] Warning: unable to set provenance on profile: {exProv}");
-                    }
-
-                    // Quick verification output (Console + DevTrace)
-                    try
-                    {
-                        var panelDbg = profile.ImportedSensorPanelPath ?? "<null>";
-                        var pkgDbg = profile.ImportedSensorPackagePath ?? "<null>";
-                        //DevTrace.Write($"[SQX Import] persisted panel XML -> {panelDbg}");
-                        DevTrace.Write($"[SQX Import] recorded package path -> {pkgDbg}");
-                        try { Console.WriteLine($"[SQX Import] panel='{panelDbg}', package='{pkgDbg}'"); } catch { }
-                    }
-                    catch { /* ignore debug failures */ }
+                    profile.ImportedSensorPanelPath = persistedProfileXml;
+                    profile.ImportedSensorPackagePath = sqxFile;
                 }
                 catch (Exception ex)
                 {
                     DevTrace.Write($"[SQX Import] Unexpected error while persisting provenance: {ex}");
                 }
-                // -----------------------------------------------------------------------------
 
-                // 9b) ---------------------- Persist textual sources into profiles/assets (minimal, corrected) ----------------------
+                // 9b) Persist textual sources into profiles/assets
                 try
                 {
-                    // We already have profileFolder above; do NOT redeclare.
-                    // That folder already contains the DisplayItems.xml copy as {GUID}.xml from your step 5.
-
-                    // Confirm DisplayItems copy exists (log only)
-                    string destDisplayItemsXml = Path.Combine(profileFolder, profile.Guid + ".xml");
-                    DevTrace.Write($"[SQX Import] DisplayItems XML is at -> {destDisplayItemsXml}");
-
-                    // Create the GUID asset folder
-                    string profileAssetRoot =
-                        Path.Combine(
-                        AppPaths.Assets, profile.Guid.ToString());
+                    string profileAssetRoot = Path.Combine(AppPaths.Assets, profile.Guid.ToString());
                     Directory.CreateDirectory(profileAssetRoot);
 
-                    // Copy Profile.xml into the GUID asset folder (this one was NOT copied earlier)
                     string destProfileXml = Path.Combine(profileAssetRoot, "Profile.xml");
                     try
                     {
                         File.Copy(profileXml, destProfileXml, overwrite: true);
-                        DevTrace.Write($"[SQX Import] persisted Profile.xml into assets -> {destProfileXml}");
                     }
                     catch (Exception exCopyProfile)
                     {
                         DevTrace.Write($"[SQX Import] Warning: failed copying Profile.xml into assets: {exCopyProfile.Message}");
                     }
 
-                    // Record provenance for saving later
-                    try
-                    {
-                        profile.ImportedSensorPanelPath = destProfileXml; // textual panel XML to update on save
-                        profile.ImportedSensorPackagePath = sqxFile;      // original SQX file path
-                        DevTrace.Write($"[SQX Import] stored package path -> {sqxFile}");
-                    }
-                    catch (Exception exProv)
-                    {
-                        DevTrace.Write($"[SQX Import] Warning: cannot set provenance: {exProv.Message}");
-                    }
+                    profile.ImportedSensorPanelPath = destProfileXml;
+                    profile.ImportedSensorPackagePath = sqxFile;
                 }
                 catch (Exception exPersist)
                 {
                     DevTrace.Write($"[SQX Import] Unexpected persistence error: {exPersist.Message}");
                 }
-                // ----------------------------------------------------------------------------------------------------------------
 
-
-
-
-
-                // 10) Register profile in ConfigModel and select it
+                // 10) Register profile
                 ConfigModel.Instance.AddProfile(profile);
                 ConfigModel.Instance.SaveProfiles();
                 SharedModel.Instance.SelectedProfile = profile;
@@ -931,13 +865,11 @@ namespace SynQPanel.Views.Pages
             }
             catch (Exception exOuter)
             {
-                // Any unexpected error during steps 2-10
                 _snackbarService.Show("Import Failed", $"Unable to import SQX: {exOuter.Message}", ControlAppearance.Danger, null, TimeSpan.FromSeconds(6));
                 DevTrace.Write($"[SQX Import] Exception during import steps: {exOuter}");
             }
             finally
             {
-                // Clean up the temp folder unless debugging is enabled
                 if (!keepTempForDebug)
                 {
                     try
@@ -947,22 +879,10 @@ namespace SynQPanel.Views.Pages
                     catch (Exception exDel)
                     {
                         DevTrace.Write($"[SQX Import] Failed to delete temp folder '{tempFolder}': {exDel}");
-                        // If you don't have DeleteDirectoryWithRetries, you can use:
-                        // try { Directory.Delete(tempFolder, true); } catch { /* ignore */ }
                     }
-                }
-                else
-                {
-                    DevTrace.Write($"[SQX Import] Keeping temp folder for debug: {tempFolder}");
                 }
             }
         }
-
-
-
-
-
-
 
         // +++++++++++++++++++ SQX Temp folder Deletion helper +++++++++++++++++
         // --- Helper: recursive delete with retries and readonly clearing ---

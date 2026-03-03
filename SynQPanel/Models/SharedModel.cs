@@ -40,7 +40,7 @@ namespace SynQPanel
 
         public static SharedModel Instance { get { return lazy.Value; } }
 
-        
+
         private int _webserverFrameRate = 0;
         public int WebserverFrameRate
         {
@@ -72,7 +72,7 @@ namespace SynQPanel
         }
 
         private Profile? _selectedProfile;
-        
+
 
 
         public Profile? SelectedProfile
@@ -97,7 +97,7 @@ namespace SynQPanel
 
         private ObservableCollection<DisplayItem> GetProfileDisplayItems()
         {
-            if(SelectedProfile is Profile profile)
+            if (SelectedProfile is Profile profile)
             {
                 return GetProfileDisplayItems(profile);
             }
@@ -353,7 +353,7 @@ namespace SynQPanel
             }
         }
 
-        
+
         // in SharedModel (add near other public APIs)
         public List<DisplayItem> LoadDisplayItemsForProfile(Profile profile)
         {
@@ -362,11 +362,20 @@ namespace SynQPanel
             return LoadDisplayItemsFromFile(profile);
         }
 
+        /*
         public void SaveDisplayItemsForProfile(Profile profile, List<DisplayItem> items)
         {
             // Calls your existing SaveDisplayItems(profile, items) method (present in this class).
             SaveDisplayItems(profile, items);
         }
+        */
+
+        public void SaveDisplayItemsForProfile(Profile profile, List<DisplayItem> items, bool syncToPackage = true)
+        {
+            // Pass the flag down to the private static method
+            SaveDisplayItems(profile, items, syncToPackage);
+        }
+
 
         public GroupDisplayItem? GetParent(DisplayItem displayItem)
         {
@@ -574,10 +583,10 @@ namespace SynQPanel
 
 
 
-        
+
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, byte> _roundTripInProgress = new();
 
-        private static void SaveDisplayItems(Profile profile, ICollection<DisplayItem> displayItems)
+        private static void SaveDisplayItems(Profile profile, ICollection<DisplayItem> displayItems, bool syncToPackage = true)
         {
             if (profile == null) return;
 
@@ -585,7 +594,7 @@ namespace SynQPanel
             if (!_roundTripInProgress.TryAdd(profile.Guid, 0))
             {
                 DevTrace.Write($"[SaveDisplayItems] Reentrancy detected for profile {profile.Guid} - skipping nested round-trip.");
-                return;
+                return; 
             }
 
             try
@@ -611,7 +620,7 @@ namespace SynQPanel
                 typeof(DonutDisplayItem), typeof(TableSensorDisplayItem), typeof(SensorDisplayItem),
                 typeof(TextDisplayItem), typeof(ClockDisplayItem), typeof(CalendarDisplayItem),
                 typeof(SensorImageDisplayItem), typeof(ImageDisplayItem), typeof(HttpImageDisplayItem),
-                typeof(GaugeDisplayItem), typeof(ShapeDisplayItem)
+                typeof(GaugeDisplayItem), typeof(ShapeDisplayItem), typeof(FlipDisplayItem)
                     });
 
                 var settings = new XmlWriterSettings() { Encoding = Encoding.UTF8, Indent = true };
@@ -675,12 +684,13 @@ namespace SynQPanel
                     DevTrace.Write($"[SaveDisplayItems] Flip asset copy failed: {ex.Message}");
                 }
 
-
-
-
-
                 // --- round-trip: panel save + package re-export for .spzip and .sqx ---
-                try
+
+                if (syncToPackage)
+                {
+
+
+                    try
                 {
                     // 1) Save back to the original .sensorpanel / .sp2 if present
                     if (!string.IsNullOrWhiteSpace(profile?.ImportedSensorPanelPath))
@@ -714,49 +724,21 @@ namespace SynQPanel
                         }
                     }
 
-
-                    
-
-
-
-
-
                     // 2) If package path exists, handle package-specific re-exports (SPZIP, SQX)
                     if (!string.IsNullOrWhiteSpace(profile?.ImportedSensorPackagePath))
                     {
                         string pkgPath = profile.ImportedSensorPackagePath;
                         string pkgExt = Path.GetExtension(pkgPath).ToLowerInvariant();
 
-                        // Helper: create single simple .bak (overwrite) next to target
-                        //static void CreateSimpleBak(string target)
-                        //{
-                        //    try
-                        //    {
-                        //        if (File.Exists(target))
-                        //        {
-                        //            var dir = Path.GetDirectoryName(target) ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                        //            var baseFile = Path.GetFileName(target);
-                        //            var bakSimple = Path.Combine(dir, baseFile + ".bak");
-                        //            File.Copy(target, bakSimple, overwrite: true);
-                        //            DevTrace.Write($"[SaveDisplayItems] Created backup '{bakSimple}'.");
-                        //        }
-                        //        else
-                        //        {
-                        //            DevTrace.Write($"[SaveDisplayItems] Backup skipped; target does not exist: '{target}'.");
-                        //        }
-                        //    }
-                        //    catch (Exception ex)
-                        //    {
-                        //        DevTrace.Write($"[SaveDisplayItems] Backup creation failed (continuing): {ex.Message}");
-                        //    }
-                        //}
 
                         if (pkgExt == ".spzip")
                         {
+
+                            DevTrace.Write("[SaveDisplayItems] Detected .spzip. Skipping package overwrite; using local GUID assets only.");
+                            //Following is disabled so no changes to the original spzip
+                            
                             try
                             {
-                                //CreateSimpleBak(pkgPath);
-
                                 // Use your working SPZIP exporter (expected to overwrite pkgPath)
                                 try
                                 {
@@ -775,11 +757,11 @@ namespace SynQPanel
                             {
                                 DevTrace.Write($"[SaveDisplayItems] SPZIP branch error: {ex.Message}");
                             }
+                            
                         }
                         else if (pkgExt == ".sqx")
                         {
                             DevTrace.Write("[SaveDisplayItems] Detected .sqx. Performing local-only save to GUID assets (no package overwrite).");
-
                             try
                             {
                                 // Ensure GUID asset folder exists
@@ -859,11 +841,6 @@ namespace SynQPanel
                                     DevTrace.Write($"[SaveDisplayItems] Warning: failed copying DisplayItems.xml into assets: {exCopyDI.Message}");
                                 }
 
-
-
-
-
-
                                 // 3) Persist Profile.xml into the GUID assets folder (do not modify original package)
                                 //    Prefer writing to an existing GUID-local profile file if ImportedSensorPanelPath pointed to it,
                                 //    otherwise write a fresh Profile.xml into GUID assets and update ImportedSensorPanelPath to point to it.
@@ -897,23 +874,12 @@ namespace SynQPanel
                                 DevTrace.Write("[SaveDisplayItems] Local-only save for .sqx complete (no package overwrite).");
 
                                 // Calling SQX Export after saving method
-
-                                
-
-
-                                //++++++++++++
-
-
-
-
                             }
                             catch (Exception ex)
                             {
                                 DevTrace.Write("[SaveDisplayItems] .sqx local-save branch error: " + ex.Message);
                             }
                         }
-
-
                         else
                         {
                             DevTrace.Write($"[SaveDisplayItems] Package ext '{pkgExt}' not handled for round-trip re-export.");
@@ -924,30 +890,33 @@ namespace SynQPanel
                 {
                     DevTrace.Write($"[SaveDisplayItems] Unexpected round-trip exception: {exRound.Message}");
                 }
+                }
+                else
+                {
+                    DevTrace.Write("[SaveDisplayItems] syncToPackage=false. SKIPPING external package update.");
+                }
             }
             finally
             {
-                // Always clear the in-progress marker so subsequent saves can run.
                 _roundTripInProgress.TryRemove(profile.Guid, out _);
             }
         }
 
-        public void SaveDisplayItems(Profile profile)
+        public void SaveDisplayItems(Profile profile, bool syncToPackage = true)
         {
             if (profile != null)
             {
                 var displayItems = GetProfileDisplayItemsCopy(profile);
-                SaveDisplayItems(profile, displayItems);
+                // Pass the flag down
+                SaveDisplayItems(profile, displayItems, syncToPackage);
             }
         }
 
-        public void SaveDisplayItems()
+        public void SaveDisplayItems(bool syncToPackage = true)
         {
             if (SelectedProfile != null)
-                SaveDisplayItems(SelectedProfile);
+                SaveDisplayItems(SelectedProfile, syncToPackage);
         }
-
-
 
         /// <summary>
         /// Export a Profile as .sqx by reusing the SPZIP exporter to gather assets reliably.
@@ -1008,8 +977,6 @@ namespace SynQPanel
                 return null;
             }
 
-
-
             if (profile == null) return null;
 
             string tempRoot = Path.Combine(Path.GetTempPath(), "SynQPanel_SQX_Export_" + Guid.NewGuid().ToString("N"));
@@ -1025,7 +992,7 @@ namespace SynQPanel
             {
                 // 0) Ensure display items saved (caller should already do this; kept for safety)
                 try { ConfigModel.Instance.SaveProfiles(); } catch { /* ignore */ }
-                try { SharedModel.Instance.SaveDisplayItems(); } catch { /* ignore */ }
+                //try { SharedModel.Instance.SaveDisplayItems(); } catch { /* ignore */ }
 
                 // 1) Use existing SPZIP exporter to create a temp .spzip that contains sp2 + assets
                 //    SpzipExporter.ExportProfileAsSpzip(profile, path) returns path (as per your earlier code)
@@ -1128,30 +1095,6 @@ namespace SynQPanel
                             }
                         }
 
-                        // ORIGINAL
-                        /*
-
-                        foreach (var flip in displayItems.OfType<FlipDisplayItem>())
-                        {
-                            if (string.IsNullOrWhiteSpace(flip.ImageFolder))
-                                continue;
-
-                            if (!Directory.Exists(flip.CalculatedImageFolder))
-                            {
-                                DevTrace.Write($"[ExportProfileAsSqx] Flip image folder not found: {flip.ImageFolder}");
-                                continue;
-                            }
-
-                            foreach (var img in Directory.GetFiles(flip.ImageFolder))
-                            {
-                                var ext = Path.GetExtension(img);
-                                if (!validExts.Contains(ext)) continue;
-
-                                var dest = Path.Combine(stagingAssets, Path.GetFileName(img));
-                                File.Copy(img, dest, overwrite: true);
-                            }
-                        }
-                        */
                     }
                 }
                 catch { /* ignore profile-asset copy errors - fallback handled earlier */ }
@@ -1404,7 +1347,7 @@ namespace SynQPanel
 
 
 
-                
+
                 // helper to attach provenance information (line index + raw xml) to each created DisplayItem
                 void AttachProvenance(DisplayItem di, Dictionary<string, string> src)
                 {
@@ -1554,7 +1497,7 @@ namespace SynQPanel
 
                 SKIP_LOGGING: return;
 
-                    
+
                 }
 
                 for (int i = 2; i < items.Count; i++)
@@ -1586,7 +1529,7 @@ namespace SynQPanel
                         gauge = true;
                         key = key[7..];
                     }
-                   
+
                     if (key.StartsWith("[GRAPH]"))
                     {
                         graph = true;
@@ -1601,7 +1544,7 @@ namespace SynQPanel
 
                     var rawLabel = item.GetStringValue("LBL", key);
                     var LBL = SystemMacroResolver.Resolve(rawLabel);
-                   
+
 
 
 
@@ -1610,7 +1553,7 @@ namespace SynQPanel
                     var FNTNAM = item.GetStringValue("FNTNAM", "Arial");
                     var WID = item.GetIntValue("WID", 0);
                     var HEI = item.GetIntValue("HEI", 0);
-                    
+
                     var MINVAL = item.GetIntValue("MINVAL", 0);
                     var MAXVAL = item.GetIntValue("MAXVAL", 100);
 
@@ -1700,11 +1643,11 @@ namespace SynQPanel
                                 }
 
                                 // --- AIDA mapping block ---
-                                 string rawPanelKey = item.GetStringValue("ID", "").Trim();
-                                 string panelSensorKey = rawPanelKey
-                                     .Replace("[GRAPH]", "")
-                                     .TrimStart('-')
-                                     .Trim();
+                                string rawPanelKey = item.GetStringValue("ID", "").Trim();
+                                string panelSensorKey = rawPanelKey
+                                    .Replace("[GRAPH]", "")
+                                    .TrimStart('-')
+                                    .Trim();
 
                                 string aidaSensorId = "unknown";
                                 var aidaSensor = AidaMonitor.LatestSensors
@@ -1805,8 +1748,8 @@ namespace SynQPanel
                             Hidden = hidden
                         };
 
-                        
-                        
+
+
                         // ───── AIDA Gauge Value Text  ─────
                         gaugeDisplayItem.ShowValue = item.GetIntValue("SHWVAL", 0) == 1;
 
@@ -1815,7 +1758,7 @@ namespace SynQPanel
                             gaugeDisplayItem.ValueTextSize =
                                 item.GetIntValue("TXTSIZ", 0);
 
-                             gaugeDisplayItem.ValueFontName = item.GetStringValue("FNTNAM", string.Empty);
+                            gaugeDisplayItem.ValueFontName = item.GetStringValue("FNTNAM", string.Empty);
 
                             gaugeDisplayItem.ValueColor =
                                 DecimalBgrToHex(item.GetIntValue("VALCOL", 0));
@@ -1840,7 +1783,7 @@ namespace SynQPanel
                             try
                             {
 
-                                
+
                                 foreach (var image in STAFLS.Split('|', StringSplitOptions.RemoveEmptyEntries))
                                 {
 
@@ -1849,8 +1792,8 @@ namespace SynQPanel
 
                                     ImageDisplayItem imageDisplayItem = new(imagePath, profile, image.Trim(), true);
 
-                                   
-                                    
+
+
                                     /*
                                     string assetName = image.Trim()
                                    .Replace("&", "_");   // normalize identifier ONLY
@@ -1863,7 +1806,7 @@ namespace SynQPanel
 
                                     gaugeDisplayItem.Images.Add(imageDisplayItem);
                                 }
-                                
+
                             }
                             catch (Exception ex)
                             {
@@ -2060,10 +2003,10 @@ namespace SynQPanel
                                         if (WID > 0 && WID < TXTSIZ * multiplier)
                                         {
                                             if (ConfigModel.Instance?.EnableRslcdDebug == true)
-                                                
+
                                                 //Debug.WriteLine($"[LBL-WIDTH-ADJUST] Ignoring tiny WID={WID} for label '{LBL}' with TXTSIZ={TXTSIZ}. Setting Width->0.");
 
-                                            effectiveWID = 0;
+                                                effectiveWID = 0;
                                         }
                                     }
                                     catch
@@ -2112,7 +2055,7 @@ namespace SynQPanel
                                     AttachProvenance(textDisplayItem, item);
                                     displayItems.Add(textDisplayItem);
                                 }
-                                break;                         
+                                break;
 
 
                             case "SDATE":
@@ -2135,7 +2078,7 @@ namespace SynQPanel
                                     displayItems.Add(calendarDisplayItem);
                                 }
                                 break;
-                            
+
                             case "STIME":
                             case "STIMENS":
                                 {
@@ -2164,7 +2107,7 @@ namespace SynQPanel
 
                                     var SHWLBL = item.GetIntValue("SHWLBL", 0);
 
-                                    
+
                                     if (SHWLBL == 1)
                                     {
                                         var LBLBIS = item.GetStringValue("LBLBIS", string.Empty);
@@ -2198,7 +2141,7 @@ namespace SynQPanel
                                         displayItems.Add(label);
                                     }
 
-                                    
+
                                     var SHWVAL = item.GetIntValue("SHWVAL", 0);
 
                                     if (simple || SHWVAL == 1)   // DONE DIRECT MAPPING FOR AIDA
@@ -2378,11 +2321,11 @@ namespace SynQPanel
                     SharedModel.Instance.SelectedProfile = profile;
                 });
             }
-           // return ProcessSensorPanelImport(aidaHash, name, items, assetFolder, null);
+            // return ProcessSensorPanelImport(aidaHash, name, items, assetFolder, null);
 
         }
 
-        
+
         private static byte[] ConvertHexStringToByteArray(string hex)
         {
             if (hex.Length % 2 != 0)
@@ -2523,12 +2466,6 @@ namespace SynQPanel
                             }
                         }
 
-
-
-
-
-
-
                         //add profile
                         ConfigModel.Instance.AddProfile(profile);
                         ConfigModel.Instance.SaveProfiles();
@@ -2550,7 +2487,7 @@ namespace SynQPanel
 
         public ImmutableList<DisplayItem> GetProfileDisplayItemsCopy(Profile profile)
         {
-            if(!ProfileDisplayItemsCopy.TryGetValue(profile.Guid, out var displayItemsCopy))
+            if (!ProfileDisplayItemsCopy.TryGetValue(profile.Guid, out var displayItemsCopy))
             {
                 AccessDisplayItems(profile, new Action<ObservableCollection<DisplayItem>>((displayItems) =>
                 {
@@ -2683,55 +2620,6 @@ namespace SynQPanel
                 return sourcePath ?? string.Empty;
             }
         }
-
-        // HELPER to check sensors MAPPING
-        // safe diagnostic; add to SharedModel or a debug util
-        private static void TraceImportedSensors(Profile profile, string label)
-        {
-            if (profile == null)
-            {
-                RslcdDebug.Log($"{label}: profile is null");
-                return;
-            }
-
-            var allItems = SharedModel.Instance?.DisplayItems;
-            if (allItems == null)
-            {
-                RslcdDebug.Log($"{label}: SharedModel.DisplayItems is null");
-                return;
-            }
-
-            // Only items that are ISensorItem AND DisplayItem (so we can read ProfileGuid)
-            var items = allItems
-                .OfType<ISensorItem>()
-                .Where(i => i is DisplayItem di && di.ProfileGuid == profile.Guid)
-                .ToList();
-
-            RslcdDebug.Log($"{label}: {items.Count} sensor items for profile {profile.Guid}");
-
-            foreach (var si in items)
-            {
-                // safe to cast now because of the filter above
-                var di = (DisplayItem)si;
-
-                var typ = si.GetType().Name;
-                string sname = si.GetType().GetProperty("SensorName")?.GetValue(si)?.ToString() ?? "";
-                string stype = si.GetType().GetProperty("SensorType")?.GetValue(si)?.ToString() ?? "";
-                string id = si.GetType().GetProperty("Id")?.GetValue(si)?.ToString() ?? "";
-                string inst = si.GetType().GetProperty("Instance")?.GetValue(si)?.ToString() ?? "";
-                string entry = si.GetType().GetProperty("EntryId")?.GetValue(si)?.ToString() ?? "";
-                string plugin = si.GetType().GetProperty("PluginSensorId")?.GetValue(si)?.ToString() ?? "";
-
-                RslcdDebug.Log(
-                    $"  Type={typ} Name='{sname}' SensorType={stype} Id={id} Instance={inst} Entry={entry} Plugin='{plugin}' ProfileGuid={di.ProfileGuid}");
-            }
-        }
-
-
-       
-
-
-
 
     }
 }

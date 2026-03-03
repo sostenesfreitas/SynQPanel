@@ -112,6 +112,7 @@ namespace SynQPanel.Extras
         // ===================================================================
         // TOMORROW'S FORECAST
         // ===================================================================
+        private readonly PluginText _tomorrowDate;
         private readonly PluginSensor _tomorrowMaxTemp;
         private readonly PluginSensor _tomorrowMinTemp;
         private readonly PluginSensor _tomorrowAvgTemp;
@@ -121,6 +122,28 @@ namespace SynQPanel.Extras
         private readonly PluginSensor _tomorrowPrecipitation;
         private readonly PluginSensor _tomorrowChanceOfRain;
         private readonly PluginSensor _tomorrowChanceOfSnow;
+
+        // ===================================================================
+        // EXTENDED FORECAST (Days 3–5)
+        // ===================================================================
+        private readonly PluginText _day3Date;
+        private readonly PluginText _day3Condition;
+        private readonly PluginText _day3IconUrl;
+        private readonly PluginSensor _day3AvgTemp;
+        private readonly PluginSensor _day3ChanceOfRain;
+
+        private readonly PluginText _day4Date;
+        private readonly PluginText _day4Condition;
+        private readonly PluginText _day4IconUrl;
+        private readonly PluginSensor _day4AvgTemp;
+        private readonly PluginSensor _day4ChanceOfRain;
+
+        private readonly PluginText _day5Date;
+        private readonly PluginText _day5Condition;
+        private readonly PluginText _day5IconUrl;
+        private readonly PluginSensor _day5AvgTemp;
+        private readonly PluginSensor _day5ChanceOfRain;
+
 
         // ===================================================================
         // ICONS
@@ -140,6 +163,19 @@ namespace SynQPanel.Extras
         private readonly PluginText _hour5Time;
         private readonly PluginText _hour6IconUrl;
         private readonly PluginText _hour6Time;
+        private readonly PluginSensor _hour1Temp;
+        private readonly PluginSensor _hour1ChanceOfRain;
+        private readonly PluginSensor _hour2Temp;
+        private readonly PluginSensor _hour2ChanceOfRain;
+        private readonly PluginSensor _hour3Temp;
+        private readonly PluginSensor _hour3ChanceOfRain;
+        private readonly PluginSensor _hour4Temp;
+        private readonly PluginSensor _hour4ChanceOfRain;
+        private readonly PluginSensor _hour5Temp;
+        private readonly PluginSensor _hour5ChanceOfRain;
+        private readonly PluginSensor _hour6Temp;
+        private readonly PluginSensor _hour6ChanceOfRain;
+
 
 
 
@@ -223,6 +259,7 @@ namespace SynQPanel.Extras
             _uvIndexForecast = new PluginSensor("UV Index", 0, "");
 
             // Initialize Tomorrow's Forecast
+            _tomorrowDate = new PluginText("day2_date", "Tomorrow Date", "-");
             _tomorrowMaxTemp = new PluginSensor("Max Temperature", 0, "°C");
             _tomorrowMinTemp = new PluginSensor("Min Temperature", 0, "°C");
             _tomorrowAvgTemp = new PluginSensor("Avg Temperature", 0, "°C");
@@ -232,9 +269,26 @@ namespace SynQPanel.Extras
             _tomorrowPrecipitation = new PluginSensor("Total Precipitation", 0, "mm");
             _tomorrowChanceOfRain = new PluginSensor("Chance of Rain", 0, "%");
             _tomorrowChanceOfSnow = new PluginSensor("Chance of Snow", 0, "%");
-
-           
             _todayIconUrl = new PluginText("today_icon_url", "Today Icon URL", "-");
+
+            // Extended Forecast (Days 3–5)
+            _day3Date = new PluginText("day3_date", "Day 3 Date", "-");
+            _day3Condition = new PluginText("day3_condition", "Day 3 Condition", "-");
+            _day3IconUrl = new PluginText("day3_icon_url", "Day 3 Icon URL", "-");
+            _day3AvgTemp = new PluginSensor("Day 3 Avg Temperature", 0, "°C");
+            _day3ChanceOfRain = new PluginSensor("Day 3 Chance of Rain", 0, "%");
+
+            _day4Date = new PluginText("day4_date", "Day 4 Date", "-");
+            _day4Condition = new PluginText("day4_condition", "Day 4 Condition", "-");
+            _day4IconUrl = new PluginText("day4_icon_url", "Day 4 Icon URL", "-");
+            _day4AvgTemp = new PluginSensor("Day 4 Avg Temperature", 0, "°C");
+            _day4ChanceOfRain = new PluginSensor("Day 4 Chance of Rain", 0, "%");
+
+            _day5Date = new PluginText("day5_date", "Day 5 Date", "-");
+            _day5Condition = new PluginText("day5_condition", "Day 5 Condition", "-");
+            _day5IconUrl = new PluginText("day5_icon_url", "Day 5 Icon URL", "-");
+            _day5AvgTemp = new PluginSensor("Day 5 Avg Temperature", 0, "°C");
+            _day5ChanceOfRain = new PluginSensor("Day 5 Chance of Rain", 0, "%");
 
             // Hourly icons
             _hour1IconUrl = new PluginText("hour1_icon_url", "Hour 1 Icon", "-");
@@ -250,9 +304,24 @@ namespace SynQPanel.Extras
             _hour6IconUrl = new PluginText("hour6_icon_url", "Hour 6 Icon", "-");
             _hour6Time = new PluginText("hour6_time", "Hour 6 Time", "-");
 
+            //Hourly extended
+            _hour1Temp = new PluginSensor("Hour 1 Temperature", 0, "°C");
+            _hour1ChanceOfRain = new PluginSensor("Hour 1 Chance of Rain", 0, "%");
 
+            _hour2Temp = new PluginSensor("Hour 2 Temperature", 0, "°C");
+            _hour2ChanceOfRain = new PluginSensor("Hour 2 Chance of Rain", 0, "%");
 
+            _hour3Temp = new PluginSensor("Hour 3 Temperature", 0, "°C");
+            _hour3ChanceOfRain = new PluginSensor("Hour 3 Chance of Rain", 0, "%");
 
+            _hour4Temp = new PluginSensor("Hour 4 Temperature", 0, "°C");
+            _hour4ChanceOfRain = new PluginSensor("Hour 4 Chance of Rain", 0, "%");
+
+            _hour5Temp = new PluginSensor("Hour 5 Temperature", 0, "°C");
+            _hour5ChanceOfRain = new PluginSensor("Hour 5 Chance of Rain", 0, "%");
+
+            _hour6Temp = new PluginSensor("Hour 6 Temperature", 0, "°C");
+            _hour6ChanceOfRain = new PluginSensor("Hour 6 Chance of Rain", 0, "%");
 
         }
 
@@ -335,6 +404,7 @@ namespace SynQPanel.Extras
 
             // Tomorrow's Forecast
             var tomorrow = new PluginContainer("weather-tomorrow", "Weather · Tomorrow");
+            tomorrow.Entries.Add(_tomorrowDate);
             tomorrow.Entries.Add(_tomorrowMaxTemp);
             tomorrow.Entries.Add(_tomorrowMinTemp);
             tomorrow.Entries.Add(_tomorrowAvgTemp);
@@ -345,7 +415,7 @@ namespace SynQPanel.Extras
             tomorrow.Entries.Add(_tomorrowChanceOfRain);
             tomorrow.Entries.Add(_tomorrowChanceOfSnow);
 
-            // After the tomorrow container, before containers.Add(location);
+            // HOURLY;
             var hourly = new PluginContainer("weather-hourly", "Weather · Hourly Forecast");
             hourly.Entries.Add(_hour1Time);
             hourly.Entries.Add(_hour1IconUrl);
@@ -360,7 +430,57 @@ namespace SynQPanel.Extras
             hourly.Entries.Add(_hour6Time);
             hourly.Entries.Add(_hour6IconUrl);
 
+            //Hourly Extended
+            hourly.Entries.Add(_hour1Time);
+            hourly.Entries.Add(_hour1IconUrl);
+            hourly.Entries.Add(_hour1Temp);
+            hourly.Entries.Add(_hour1ChanceOfRain);
 
+            hourly.Entries.Add(_hour2Time);
+            hourly.Entries.Add(_hour2IconUrl);
+            hourly.Entries.Add(_hour2Temp);
+            hourly.Entries.Add(_hour2ChanceOfRain);
+
+            hourly.Entries.Add(_hour3Time);
+            hourly.Entries.Add(_hour3IconUrl);
+            hourly.Entries.Add(_hour3Temp);
+            hourly.Entries.Add(_hour3ChanceOfRain);
+
+            hourly.Entries.Add(_hour4Time);
+            hourly.Entries.Add(_hour4IconUrl);
+            hourly.Entries.Add(_hour4Temp);
+            hourly.Entries.Add(_hour4ChanceOfRain);
+
+            hourly.Entries.Add(_hour5Time);
+            hourly.Entries.Add(_hour5IconUrl);
+            hourly.Entries.Add(_hour5Temp);
+            hourly.Entries.Add(_hour5ChanceOfRain);
+
+            hourly.Entries.Add(_hour6Time);
+            hourly.Entries.Add(_hour6IconUrl);
+            hourly.Entries.Add(_hour6Temp);
+            hourly.Entries.Add(_hour6ChanceOfRain);
+
+
+            var extended = new PluginContainer("weather-extended", "Weather · Extended Forecast");
+
+            extended.Entries.Add(_day3Date);
+            extended.Entries.Add(_day3Condition);
+            extended.Entries.Add(_day3IconUrl);
+            extended.Entries.Add(_day3AvgTemp);
+            extended.Entries.Add(_day3ChanceOfRain);
+
+            extended.Entries.Add(_day4Date);
+            extended.Entries.Add(_day4Condition);
+            extended.Entries.Add(_day4IconUrl);
+            extended.Entries.Add(_day4AvgTemp);
+            extended.Entries.Add(_day4ChanceOfRain);
+
+            extended.Entries.Add(_day5Date);
+            extended.Entries.Add(_day5Condition);
+            extended.Entries.Add(_day5IconUrl);
+            extended.Entries.Add(_day5AvgTemp);
+            extended.Entries.Add(_day5ChanceOfRain);
 
             containers.Add(location);
             containers.Add(current);
@@ -370,7 +490,7 @@ namespace SynQPanel.Extras
             containers.Add(today);
             containers.Add(tomorrow);
             containers.Add(hourly);
-
+            containers.Add(extended);
         }
 
         [PluginAction("Get API Key")]
@@ -454,7 +574,7 @@ namespace SynQPanel.Extras
             string url = $"https://api.weatherapi.com/v1/forecast.json" +
                         $"?key={_apiKey}" +
                         $"&q={Uri.EscapeDataString(_location ?? "London")}" +
-                        $"&days=2" +
+                        $"&days=5" +
                         $"&aqi=yes" +
                         $"&alerts=no";
 
@@ -516,7 +636,16 @@ namespace SynQPanel.Extras
                     {
                         ParseTomorrowForecast(daysArray[1]);
                     }
+
+                    if (daysArray.Length > 2)
+                    {
+                        ParseExtendedForecast(daysArray);
+                    }
+                   // System.Diagnostics.Debug.WriteLine($"[Weather] forecastday count = {daysArray.Length}");
+                   // System.Diagnostics.Debug.WriteLine("[Weather] Day3 JSON: " + daysArray[2].GetRawText());
                 }
+
+
             }
         }
 
@@ -640,6 +769,15 @@ namespace SynQPanel.Extras
 
         private void ParseTomorrowForecast(JsonElement day)
         {
+            if (day.TryGetProperty("date", out var dateProp))
+            {
+                var dateStr = dateProp.GetString() ?? "-";
+                if (DateTime.TryParse(dateStr, out var dt))
+                    _tomorrowDate.Value = dt.ToString("ddd dd");
+                else
+                    _tomorrowDate.Value = dateStr;
+            }
+
             if (day.TryGetProperty("day", out var dayData))
             {
                 _tomorrowMaxTemp.Value = _useFahrenheit
@@ -682,7 +820,6 @@ namespace SynQPanel.Extras
             var allUpcomingHours = new List<JsonElement>();
             var currentHour = DateTime.Now.Hour;
 
-            // Get remaining hours from today
             if (todayDay.TryGetProperty("hour", out var todayHours))
             {
                 var todayRemaining = todayHours.EnumerateArray()
@@ -697,7 +834,6 @@ namespace SynQPanel.Extras
                 allUpcomingHours.AddRange(todayRemaining);
             }
 
-            // If we need more hours, get from tomorrow
             if (allUpcomingHours.Count < 6 && tomorrowDay.HasValue)
             {
                 if (tomorrowDay.Value.TryGetProperty("hour", out var tomorrowHours))
@@ -707,18 +843,20 @@ namespace SynQPanel.Extras
                 }
             }
 
-            // Assign to fields
-            if (allUpcomingHours.Count > 0) ParseHourData(allUpcomingHours[0], _hour1Time, _hour1IconUrl);
-            if (allUpcomingHours.Count > 1) ParseHourData(allUpcomingHours[1], _hour2Time, _hour2IconUrl);
-            if (allUpcomingHours.Count > 2) ParseHourData(allUpcomingHours[2], _hour3Time, _hour3IconUrl);
-            if (allUpcomingHours.Count > 3) ParseHourData(allUpcomingHours[3], _hour4Time, _hour4IconUrl);
-            if (allUpcomingHours.Count > 4) ParseHourData(allUpcomingHours[4], _hour5Time, _hour5IconUrl);
-            if (allUpcomingHours.Count > 5) ParseHourData(allUpcomingHours[5], _hour6Time, _hour6IconUrl);
+            if (allUpcomingHours.Count > 0) ParseHourData(allUpcomingHours[0], _hour1Time, _hour1IconUrl, _hour1Temp, _hour1ChanceOfRain);
+            if (allUpcomingHours.Count > 1) ParseHourData(allUpcomingHours[1], _hour2Time, _hour2IconUrl, _hour2Temp, _hour2ChanceOfRain);
+            if (allUpcomingHours.Count > 2) ParseHourData(allUpcomingHours[2], _hour3Time, _hour3IconUrl, _hour3Temp, _hour3ChanceOfRain);
+            if (allUpcomingHours.Count > 3) ParseHourData(allUpcomingHours[3], _hour4Time, _hour4IconUrl, _hour4Temp, _hour4ChanceOfRain);
+            if (allUpcomingHours.Count > 4) ParseHourData(allUpcomingHours[4], _hour5Time, _hour5IconUrl, _hour5Temp, _hour5ChanceOfRain);
+            if (allUpcomingHours.Count > 5) ParseHourData(allUpcomingHours[5], _hour6Time, _hour6IconUrl, _hour6Temp, _hour6ChanceOfRain);
         }
 
-
-
-        private void ParseHourData(JsonElement hour, PluginText timeField, PluginText iconField)
+        private void ParseHourData(
+            JsonElement hour,
+            PluginText timeField,
+            PluginText iconField,
+            PluginSensor tempField,
+            PluginSensor chanceOfRainField)
         {
             timeField.Value = hour.GetProperty("time").GetString()?.Split(' ')[1] ?? "-";
 
@@ -726,8 +864,63 @@ namespace SynQPanel.Extras
             {
                 iconField.Value = "https:" + (condition.GetProperty("icon").GetString() ?? "");
             }
+
+            tempField.Value = _useFahrenheit
+                ? (float)hour.GetProperty("temp_f").GetDouble()
+                : (float)hour.GetProperty("temp_c").GetDouble();
+
+            if (hour.TryGetProperty("chance_of_rain", out var rainChance))
+                chanceOfRainField.Value = (float)rainChance.GetDouble();
         }
 
+
+        private void ParseExtendedForecast(JsonElement[] daysArray)
+        {
+            // daysArray[0] = today, [1] = tomorrow, [2].. = extended
+            if (daysArray.Length > 2)
+                FillExtendedDay(daysArray[2], _day3Date, _day3Condition, _day3IconUrl, _day3AvgTemp, _day3ChanceOfRain);
+
+            if (daysArray.Length > 3)
+                FillExtendedDay(daysArray[3], _day4Date, _day4Condition, _day4IconUrl, _day4AvgTemp, _day4ChanceOfRain);
+
+            if (daysArray.Length > 4)
+                FillExtendedDay(daysArray[4], _day5Date, _day5Condition, _day5IconUrl, _day5AvgTemp, _day5ChanceOfRain);
+        }
+
+        private void FillExtendedDay(
+            JsonElement day,
+            PluginText dateField,
+            PluginText conditionField,
+            PluginText iconField,
+            PluginSensor avgTempField,
+            PluginSensor chanceOfRainField)
+        {
+            if (day.TryGetProperty("date", out var dateProp))
+            {
+                var dateStr = dateProp.GetString() ?? "-";
+                // You can keep raw yyyy-MM-dd or format it:
+                if (DateTime.TryParse(dateStr, out var dt))
+                    dateField.Value = dt.ToString("ddd dd");
+                else
+                    dateField.Value = dateStr;
+            }
+
+            if (day.TryGetProperty("day", out var dayData))
+            {
+                if (dayData.TryGetProperty("condition", out var cond))
+                {
+                    conditionField.Value = cond.GetProperty("text").GetString() ?? "-";
+                    iconField.Value = "https:" + (cond.GetProperty("icon").GetString() ?? "");
+                }
+
+                avgTempField.Value = _useFahrenheit
+                    ? (float)dayData.GetProperty("avgtemp_f").GetDouble()
+                    : (float)dayData.GetProperty("avgtemp_c").GetDouble();
+
+                if (dayData.TryGetProperty("daily_chance_of_rain", out var rainChance))
+                    chanceOfRainField.Value = (float)rainChance.GetDouble();
+            }
+        }
 
 
 

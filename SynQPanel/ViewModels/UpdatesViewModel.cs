@@ -178,7 +178,7 @@ namespace SynQPanel.ViewModels
 
                         new UpdateVersionItem
                         {
-                            Title = "Canvas Context Menu & Tray Behavior",
+                            Title = "SensorPanel Context Menu & Tray Behavior",
                             Description =
                             [
                                 "Added right-click context menu on the displayed sensorpanels.",
@@ -226,7 +226,7 @@ namespace SynQPanel.ViewModels
                                 "Fixed broken Bold and Italic rendering for text value.",
                                 "Gauge label font family, size, bold, and italic are now correctly imported from AIDA.",
                                 "Gauge label settings can now be fully adjusted inside SynQPanel and saved back correctly.",
-                                "Improved consistency between SynQPanel canvas rendering and AIDA panel behavior."
+                                "Improved consistency between SynQPanel SensorPanel rendering and AIDA panel behavior."
                             ]
                         },
 
@@ -299,7 +299,7 @@ namespace SynQPanel.ViewModels
                             Description =
                             [
                                 "Added a Weather add-on powered by WeatherAPI.com, exposing current conditions, detailed daily forecasts, air quality, and astronomy data.",
-                                "Added multiple icon URL sensors (current, today, tomorrow, hourly) to build rich weather widgets with live condition icons on the canvas."
+                                "Added multiple icon URL sensors (current, today, tomorrow, hourly) to build rich weather widgets with live condition icons on the SensorPanel."
                             ]
                         },
 
@@ -327,10 +327,65 @@ namespace SynQPanel.ViewModels
                     ]
                 };
 
+                var version104 = new UpdateVersion
+                {
+                    Version = "v1.0.4",
+                    Expanded = false, 
+                    Title = "Advanced Flip Clock, Extended Weather, and Core Stability",
+                    Items =
+                    [
+                        new UpdateVersionItem
+                            {
+                                Title = "Next-Gen Flip Clock - Full Flap",
+                                Description =
+                                [
+                                    "Introduced a new 'Single Digit' mode with independent, perfectly synchronized Full-Flap animations (0-9), alongside the classic 'Split-Flap' style (00-59).",
+                                    "Visual overhaul featuring realistic 3D lighting, dynamic depth shadows, and smooth ease-in-out animation curves.",
+                                    "Redesigned customization UI with an interactive real-time preview, smart image auto-sizing, and advanced sliders for Speed, Shadow, and Lighting."
+                                ]
+                            },
+                            new UpdateVersionItem
+                            {
+                                Title = "Weather & TimeFlow Enhancements",
+                                Description =
+                                [
+                                    "Extended the Weather add-on to support 7-day forecasts and detailed hourly data (temperature and rain probability).",
+                                    "TimeFlow absolute sensors (Seconds, Minutes, Hours, etc.) now automatically render with perfect two-digit zero-padding (e.g., '05') on SensorPanel text items.",
+                                    "Resolved an issue where 'Days of the Week' sensors were not displaying the correct day image."
+                                ]
+                            },
+                            new UpdateVersionItem
+                            {
+                                Title = "Import, Export & Profiles",
+                                Description =
+                                [
+                                    "Fixed an issue where .sqx exports would incorrectly modify or overwrite original .spzip package files.",
+                                    "Wattage sensors now correctly retain their decimal precision when importing an .sqx profile.",
+                                    "Resolved an issue causing missing weather forecast icons and incorrect time layouts when re-importing a previously deleted .sqx file."
+                                ]
+                            },
+                            new UpdateVersionItem
+                            {
+                                Title = "Core System Fixes & Hardware Polling",
+                                Description =
+                                [
+                                    "SynQPanel will now silently wait and automatically connect the moment AIDA64 starts, eliminating the need to restart the app.",
+                                    "The 'Startup Delay' setting now saves and applies instantly to the Windows Scheduled Task.",
+                                    "Custom sensor unit spacing now perfectly matches AIDA64 native formatting rules (preventing unwanted spaces before °C, °F, and %).",
+                                    "Imported fonts without explicit styling now safely default to 'Regular/Normal' rather than incorrectly applying 'Thin/Hairline'.",
+                                    "Resolved a bug where text sensors for the CPU Fan would unexpectedly switch to incorrect data sources."
+                                ]
+                            }
+                    ]
+                };
+
+
+
             UpdateVersions.Add(version100);
             UpdateVersions.Add(version101);
             UpdateVersions.Add(version102);
             UpdateVersions.Add(version103);
+            UpdateVersions.Add(version104);
         }
     }
 

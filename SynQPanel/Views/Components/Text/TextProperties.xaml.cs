@@ -1,8 +1,9 @@
-﻿using SynQPanel.Drawing;
-using SynQPanel.Models;
+﻿using Serilog;
 using SkiaSharp;
+using SynQPanel.Drawing;
+using SynQPanel.Models;
+using System;
 using System.Collections.ObjectModel;
-using Serilog;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -146,7 +147,15 @@ namespace SynQPanel.Views.Components
                             }
                         }
 
-                        item.FontStyle = control.FontStyles[0];
+                        //OLD
+                        //item.FontStyle = control.FontStyles[0];
+
+                        // FIX: Prioritize Regular/Normal over index 0
+                        string? defaultStyle = control.FontStyles.FirstOrDefault(s =>
+                            s.Equals("Regular", StringComparison.OrdinalIgnoreCase) ||
+                            s.Equals("Normal", StringComparison.OrdinalIgnoreCase));
+
+                        item.FontStyle = defaultStyle ?? control.FontStyles[0];
                     }
                 }
             }
@@ -193,7 +202,15 @@ namespace SynQPanel.Views.Components
                         }
                     }
 
-                    item.FontStyle = control.FontStyles[0];
+                    // OLD
+                    //item.FontStyle = control.FontStyles[0];
+
+                    // FIX: Prioritize Regular/Normal over index 0
+                    string? defaultStyle = control.FontStyles.FirstOrDefault(s =>
+                        s.Equals("Regular", StringComparison.OrdinalIgnoreCase) ||
+                        s.Equals("Normal", StringComparison.OrdinalIgnoreCase));
+
+                    item.FontStyle = defaultStyle ?? control.FontStyles[0];
                 }
             }
         }

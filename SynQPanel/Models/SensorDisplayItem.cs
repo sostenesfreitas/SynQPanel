@@ -23,7 +23,7 @@ namespace SynQPanel.Models
 
 
         private Enums.SensorType _sensorType = Enums.SensorType.Plugin;
-        public Enums.SensorType SensorType
+        public new Enums.SensorType SensorType
         {
             get { return _sensorType; }
             set
@@ -310,82 +310,109 @@ namespace SynQPanel.Models
             return Color;
         }
 
-        private string EvaluateColor(SensorReading sensorReading)
-        {
-            if (Threshold1 > 0 || Threshold2 > 0)
+            private string EvaluateColor(SensorReading sensorReading)
             {
-                double sensorReadingValue;
-
-                switch (ValueType)
+                if (Threshold1 > 0 || Threshold2 > 0)
                 {
-                    case SensorValueType.MIN:
-                        sensorReadingValue = sensorReading.ValueMin;
-                        break;
-                    case SensorValueType.MAX:
-                        sensorReadingValue = sensorReading.ValueMax;
-                        break;
-                    case SensorValueType.AVERAGE:
-                        sensorReadingValue = sensorReading.ValueAvg;
-                        break;
-                    default:
-                        sensorReadingValue = sensorReading.ValueNow;
-                        break;
-                }
+                    double sensorReadingValue;
 
-                if (DivisionToggle)
-                {
-                    if(MultiplicationModifier != 0)
+                    switch (ValueType)
                     {
-                        sensorReadingValue = sensorReadingValue / MultiplicationModifier + AdditionModifier;
-                    } else {
-                        sensorReadingValue = sensorReadingValue + AdditionModifier;
+                        case SensorValueType.MIN:
+                            sensorReadingValue = sensorReading.ValueMin;
+                            break;
+                        case SensorValueType.MAX:
+                            sensorReadingValue = sensorReading.ValueMax;
+                            break;
+                        case SensorValueType.AVERAGE:
+                            sensorReadingValue = sensorReading.ValueAvg;
+                            break;
+                        default:
+                            sensorReadingValue = sensorReading.ValueNow;
+                            break;
                     }
-                } else
-                {
-                    sensorReadingValue = sensorReadingValue * MultiplicationModifier + AdditionModifier;
-                }
+
+                    if (DivisionToggle)
+                    {
+                        if(MultiplicationModifier != 0)
+                        {
+                            sensorReadingValue = sensorReadingValue / MultiplicationModifier + AdditionModifier;
+                        } else {
+                            sensorReadingValue = sensorReadingValue + AdditionModifier;
+                        }
+                    } else
+                    {
+                        sensorReadingValue = sensorReadingValue * MultiplicationModifier + AdditionModifier;
+                    }
 
 
-                if (AbsoluteAddition)
-                {
-                    sensorReadingValue = Math.Abs(sensorReadingValue);
-                }
+                    if (AbsoluteAddition)
+                    {
+                        sensorReadingValue = Math.Abs(sensorReadingValue);
+                    }
 
-                if (Threshold2 > 0 && sensorReadingValue >= Threshold2)
-                {
-                    return Threshold2Color;
+                    if (Threshold2 > 0 && sensorReadingValue >= Threshold2)
+                    {
+                        return Threshold2Color;
+                    }
+                    else if (Threshold1 > 0 && sensorReadingValue >= Threshold1)
+                    {
+                        return Threshold1Color;
+                    }
                 }
-                else if (Threshold1 > 0 && sensorReadingValue >= Threshold1)
-                {
-                    return Threshold1Color;
-                }
+                return Color;
             }
-            return Color;
-        }
 
-        public override string EvaluateText()
-        {
-            var sensorReading = GetValue();
-
-            if (sensorReading.HasValue)
+            public override string EvaluateText()
             {
-                return EvaluateText(sensorReading.Value);
-            }
+                var sensorReading = GetValue();
 
-            return "-";
-        }
+                if (sensorReading.HasValue)
+                {
+                    return EvaluateText(sensorReading.Value);
+                }
+
+                return "-";
+            }
 
         private string EvaluateText(SensorReading sensorReading)
         {
             string? value;
-            // new string sensor handling
-            if (!string.IsNullOrEmpty(sensorReading.ValueText))
+
+            // =====================================================================
+            // FIX: Intercept TimeFlow components FIRST before ValueText bypasses it
+            // =====================================================================
+            bool isTimeFlowPadded = false;
+            if (SensorType == Enums.SensorType.Plugin)
+            {
+                string idCheck = (PluginSensorId ?? "").ToLowerInvariant().Trim();
+                string nameCheck = (SensorName ?? "").ToLowerInvariant().Trim();
+
+                // Check if the ID or Name ends with the exact TimeFlow absolute names
+                // (This catches "timeflow/minute", "timeflow/second", or just "minute")
+                if (idCheck.EndsWith("minute") || nameCheck.EndsWith("minute") ||
+                    idCheck.EndsWith("second") || nameCheck.EndsWith("second") ||
+                    idCheck.EndsWith("hour (12)") || nameCheck.EndsWith("hour (12)") ||
+                    idCheck.EndsWith("hour (24)") || nameCheck.EndsWith("hour (24)") ||
+                    idCheck.EndsWith("day") || nameCheck.EndsWith("day") ||
+                    idCheck.EndsWith("month") || nameCheck.EndsWith("month"))
+                {
+                    isTimeFlowPadded = true;
+                }
+            }
+
+            if (isTimeFlowPadded)
+            {
+                // Force exactly two digits from the raw mathematical value (e.g. 5 -> "05")
+                value = string.Format("{0:00}", sensorReading.ValueNow);
+            }
+            // Standard string sensor handling
+            else if (!string.IsNullOrEmpty(sensorReading.ValueText))
             {
                 value = sensorReading.ValueText;
             }
             else
             {
-
                 double sensorReadingValue;
 
                 switch (ValueType)
@@ -424,7 +451,6 @@ namespace SynQPanel.Models
                 {
                     sensorReadingValue = Math.Abs(sensorReadingValue);
                 }
-
 
                 if (OverridePrecision)
                 {
@@ -467,36 +493,37 @@ namespace SynQPanel.Models
                 }
             }
 
-
             if (ShowUnit)
             {
-                // Prefer override if user selected it.
-                string unitToShow;
                 if (OverrideUnit)
                 {
-                    unitToShow = Unit?.Trim() ?? string.Empty;
+                    // Preserve exact spaces from the text box
+                    string unitToShow = Unit ?? string.Empty;
+                    value += unitToShow;
                 }
                 else
                 {
-                    // Prefer the unit from the live sensor reading; if it is empty, fall back to the display item's Unit.
-                    unitToShow = !string.IsNullOrEmpty(sensorReading.Unit) ? sensorReading.Unit.Trim() : (Unit?.Trim() ?? string.Empty);
-                }
+                    // FALLBACK: Use live sensor unit and apply AIDA's default spacing rules
+                    string unitToShow = !string.IsNullOrEmpty(sensorReading.Unit)
+                        ? sensorReading.Unit.Trim()
+                        : (Unit?.Trim() ?? string.Empty);
 
-                if (!string.IsNullOrEmpty(unitToShow))
-                {
-                    // For percent we usually don't want a space: "42%" not "42 %"
-                    if (unitToShow == "%")
-                        value += unitToShow;
-                    else
+                    if (!string.IsNullOrEmpty(unitToShow))
                     {
-                        // Add a space separator if the numeric value doesn't already have a trailing text unit.
-                        if (!value.EndsWith(" "))
-                            value += " ";
-                        value += unitToShow;
+                        if (unitToShow == "%" || unitToShow == "°C" || unitToShow == "°F")
+                        {
+                            value += unitToShow;
+                        }
+                        else
+                        {
+                            if (!value.EndsWith(" "))
+                                value += " ";
+
+                            value += unitToShow;
+                        }
                     }
                 }
             }
-
 
             if (ShowName)
             {
@@ -504,7 +531,7 @@ namespace SynQPanel.Models
             }
 
             return value;
-
         }
+
     }
 }

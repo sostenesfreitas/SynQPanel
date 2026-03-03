@@ -278,7 +278,8 @@ namespace SynQPanel.Views.Components
 
             // 1) Ensure latest data is saved (same as your existing export)
             ConfigModel.Instance.SaveProfiles();
-            SharedModel.Instance.SaveDisplayItems();
+            //SharedModel.Instance.SaveDisplayItems();
+            SharedModel.Instance.SaveDisplayItems(profile, syncToPackage: false);
 
             // 2) Build default filename (same logic as your other export)
             string baseName = profile.Name ?? "panel";
