@@ -885,7 +885,7 @@ namespace SynQPanel.Drawing
                         break;
                     }
 
-                    case FlipDisplayItem flip:
+                case FlipDisplayItem flip:
                     {
                         if (string.IsNullOrWhiteSpace(flip.ImageFolder))
                             break;
@@ -935,8 +935,6 @@ namespace SynQPanel.Drawing
 
                         int rawValue = (int)valueReading.Value.ValueNow;
 
-
-                        // THIS is the value used for rendering
                         int value = flip.TimeUnit == FlipTimeUnit.Hour12
                             ? Math.Clamp(rawValue, 1, 12)
                             : Math.Clamp(rawValue, 0, maxValue);
@@ -954,16 +952,14 @@ namespace SynQPanel.Drawing
                                 ? Math.Clamp((float)phaseReading.Value.ValueNow, 0f, 1f)
                                 : 0f;
 
-                            isAnimating = true; // seconds always animate
+                            isAnimating = true;
                         }
                         else if (flip.TimeUnit == FlipTimeUnit.Minute)
                         {
-                            // Check if we're at second 59 (flip trigger)
                             var secondReading = SensorReader.ReadPluginSensor("/timeflow/timeflow-absolute/second");
 
                             if (secondReading.HasValue && (int)secondReading.Value.ValueNow == 59)
                             {
-                                // We're flipping! Use second-phase for smooth animation
                                 var phaseReading = SensorReader.ReadPluginSensor("/timeflow/timeflow-flow/second-phase");
                                 progress = phaseReading.HasValue
                                     ? Math.Clamp((float)phaseReading.Value.ValueNow, 0f, 1f)
@@ -972,21 +968,18 @@ namespace SynQPanel.Drawing
                             }
                             else
                             {
-                                // Not flipping, show static
                                 progress = 1f;
                                 isAnimating = false;
                             }
                         }
                         else // Hour12 / Hour24
                         {
-                            // Check if we're at minute=59 AND second=59 (flip trigger)
                             var minuteReading = SensorReader.ReadPluginSensor("/timeflow/timeflow-absolute/minute");
                             var secondReading = SensorReader.ReadPluginSensor("/timeflow/timeflow-absolute/second");
 
                             if (minuteReading.HasValue && (int)minuteReading.Value.ValueNow == 59 &&
                                 secondReading.HasValue && (int)secondReading.Value.ValueNow == 59)
                             {
-                                // We're flipping! Use second-phase for smooth animation
                                 var phaseReading = SensorReader.ReadPluginSensor("/timeflow/timeflow-flow/second-phase");
                                 progress = phaseReading.HasValue
                                     ? Math.Clamp((float)phaseReading.Value.ValueNow, 0f, 1f)
@@ -995,82 +988,180 @@ namespace SynQPanel.Drawing
                             }
                             else
                             {
-                                // Not flipping, show static
                                 progress = 1f;
                                 isAnimating = false;
                             }
                         }
 
                         // -------------------------
-                        // CURRENT IMAGE
+                        // RENDER BASED ON FLIP STYLE
                         // -------------------------
-                        string currentPath = Path.Combine(
-                            flip.CalculatedImageFolder,
-                            value.ToString().PadLeft(flip.DigitCount, '0') + ".png"
-                        );
-
-                        if (!File.Exists(currentPath))
-                            break;
-
-                        var currentLocked = Cache.GetLocalImageFromPath(
-                            currentPath,
-                            initialiseIfMissing: true,
-                            imageDisplayItem: null
-                        );
-
-                        if (currentLocked == null || !currentLocked.Loaded)
-                            break;
-
-                        // -------------------------
-                        // NEXT IMAGE (ONLY WHEN ALLOWED)
-                        // -------------------------
-                        LockedImage? nextLocked = null;
-
-                        if (isAnimating)
+                        if (flip.FlipStyle == FlipStyle.SplitFlap)
                         {
+                            // ====================================
+                            // SPLITFLAP MODE (CURRENT WORKING CODE)
+                            // ====================================
+                            string currentPath = Path.Combine(
+                                flip.CalculatedImageFolder,
+                                value.ToString().PadLeft(flip.DigitCount, '0') + ".png"
+                            );
+
+                            if (!File.Exists(currentPath))
+                                break;
+
+                            var currentLocked = Cache.GetLocalImageFromPath(
+                                currentPath,
+                                initialiseIfMissing: true,
+                                imageDisplayItem: null
+                            );
+
+                            if (currentLocked == null || !currentLocked.Loaded)
+                                break;
+
+                            LockedImage? nextLocked = null;
+
+                            if (isAnimating)
+                            {
+                                int nextValue = flip.TimeUnit switch
+                                {
+                                    FlipTimeUnit.Hour12 => value == 12 ? 1 : value + 1,
+                                    _ => (value + 1) % (maxValue + 1)
+                                };
+
+                                string nextPath = Path.Combine(
+                                    flip.CalculatedImageFolder,
+                                    nextValue.ToString().PadLeft(flip.DigitCount, '0') + ".png"
+                                );
+
+                                if (File.Exists(nextPath))
+                                {
+                                    nextLocked = Cache.GetLocalImageFromPath(
+                                        nextPath,
+                                        initialiseIfMissing: true,
+                                        imageDisplayItem: null
+                                    );
+                                }
+                            }
+
+                            FlipRendererModern.Draw(
+                                g,
+                                currentLocked,
+                                nextLocked,
+                                x,
+                                y,
+                                w,
+                                h,
+                                value,
+                                flip.DigitCount,
+                                flip.CalculatedImageFolder,
+                                progress,
+                                scale,
+                                cacheHint,
+                                flip.ShadowIntensity,
+                                flip.LightingIntensity
+                            );
+                        }
+                        else if (flip.FlipStyle == FlipStyle.SingleDigit)
+                        {
+                            // ====================================
+                            // SINGLE DIGIT MODE (NEW)
+                            // ====================================
+
+                            // Split value into tens and ones
+                            int tens = value / 10;
+                            int ones = value % 10;
+
+                            // Calculate next value
                             int nextValue = flip.TimeUnit switch
                             {
                                 FlipTimeUnit.Hour12 => value == 12 ? 1 : value + 1,
                                 _ => (value + 1) % (maxValue + 1)
                             };
 
-                            string nextPath = Path.Combine(
-                                flip.CalculatedImageFolder,
-                                nextValue.ToString().PadLeft(flip.DigitCount, '0') + ".png"
-                            );
+                            int nextTens = nextValue / 10;
+                            int nextOnes = nextValue % 10;
 
-                            if (File.Exists(nextPath))
+                            // Determine which digits should flip (synchronized)
+                            bool tensFlips = isAnimating && (tens != nextTens);
+                            bool onesFlips = isAnimating && (ones != nextOnes);
+
+                            // Digit dimensions (half width for single digits)
+                            int digitW = w / 2;
+                            int spacing = (int)Math.Floor(flip.DigitSpacing * scale);
+
+                            // Helper: Load single digit image
+                            LockedImage? LoadDigit(int digit)
                             {
-                                nextLocked = Cache.GetLocalImageFromPath(
-                                    nextPath,
+                                string path = Path.Combine(flip.CalculatedImageFolder, $"{digit}.png");
+                                if (!File.Exists(path))
+                                {
+                                    // Fallback: try zero-padded (e.g., "04.png")
+                                    path = Path.Combine(flip.CalculatedImageFolder, $"{digit:00}.png");
+                                    if (!File.Exists(path))
+                                        return null;
+                                }
+
+                                return Cache.GetLocalImageFromPath(
+                                    path,
                                     initialiseIfMissing: true,
                                     imageDisplayItem: null
                                 );
                             }
+
+                            // Load current digits
+                            var tensCurrentLocked = LoadDigit(tens);
+                            var onesCurrentLocked = LoadDigit(ones);
+
+                            if (tensCurrentLocked == null || !tensCurrentLocked.Loaded ||
+                                onesCurrentLocked == null || !onesCurrentLocked.Loaded)
+                                break;
+
+                            // Load next digits (only if flipping)
+                            LockedImage? tensNextLocked = tensFlips ? LoadDigit(nextTens) : null;
+                            LockedImage? onesNextLocked = onesFlips ? LoadDigit(nextOnes) : null;
+
+                            // Draw TENS digit (left)
+                            FlipRendererSingle.Draw(
+                                g,
+                                tensCurrentLocked,
+                                tensNextLocked,
+                                x,
+                                y,
+                                digitW,
+                                h,
+                                tens,
+                                nextTens,
+                                tensFlips,
+                                progress,
+                                scale,
+                                cacheHint + "_tens",
+                                flip.ShadowIntensity,
+                                flip.LightingIntensity
+                            );
+
+                            // Draw ONES digit (right, with spacing)
+                            FlipRendererSingle.Draw(
+                                g,
+                                onesCurrentLocked,
+                                onesNextLocked,
+                                x + digitW + spacing,
+                                y,
+                                digitW,
+                                h,
+                                ones,
+                                nextOnes,
+                                onesFlips,
+                                progress,
+                                scale,
+                                cacheHint + "_ones",
+                                flip.ShadowIntensity,
+                                flip.LightingIntensity
+                            );
                         }
 
-                        // -------------------------
-                        // DRAW (UNCHANGED)
-                        // -------------------------
-                        FlipRendererModern.Draw(
-                         g,
-                         currentLocked,
-                         nextLocked,
-                         x,
-                         y,
-                         w,
-                         h,
-                         value,
-                         flip.DigitCount,
-                         flip.CalculatedImageFolder, // ✅ FIX
-                         progress,
-                         scale,
-                         cacheHint
-                     );
-
-
-                     break;
+                        break;
                     }
+
 
 
                     /*      

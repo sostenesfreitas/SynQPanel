@@ -305,6 +305,61 @@ namespace SynQPanel.Models
 
 
         private double currentImageIndex = 0;
+
+        public ImageDisplayItem? EvaluateImage(double interpolationDelay = 1)
+        {
+            ImageDisplayItem? result = null;
+            if (_images.Count == 1)
+            {
+                result = Images[0];
+            }
+
+            if (_images.Count > 1)
+            {
+                var sensorReading = GetValue();
+                if (sensorReading.HasValue)
+                {
+
+                    double rawVal = sensorReading.Value.ValueNow;
+
+                    // Normalize to 0.0 - 1.0
+                    double range = _maxValue - _minValue;
+                    double fraction = range != 0 ? (rawVal - _minValue) / range : 0;
+                    fraction = Math.Clamp(fraction, 0.0, 1.0);
+
+                    // Universal Mapping: Floor(fraction * Count)
+                    // This distributes values evenly across all available images
+                    int index = (int)Math.Floor(fraction * _images.Count);
+
+                    // Handle the 100% case (fraction=1.0 -> index=Count -> out of bounds)
+                    if (index >= _images.Count)
+                    {
+                        index = _images.Count - 1;
+                    }
+
+                    // Interpolation logic
+                    var intermediateIndex = Interpolate(currentImageIndex, index, interpolationDelay * 2);
+                    intermediateIndex = Math.Clamp(intermediateIndex, 0, Images.Count - 1);
+                    currentImageIndex = intermediateIndex;
+
+                    result = Images[(int)Math.Round(intermediateIndex)];
+                }
+                else
+                {
+                    result = Images[0];
+                }
+            }
+
+            if (result != null)
+            {
+                result.Scale = _scale;
+            }
+
+            return result;
+        }
+
+
+        /*
         public ImageDisplayItem? EvaluateImage(double interpolationDelay = 1)
         {
             ImageDisplayItem? result = null;
@@ -342,6 +397,7 @@ namespace SynQPanel.Models
 
             return result;
         }
+        */
 
         public ImageDisplayItem? CurrentImage
         {

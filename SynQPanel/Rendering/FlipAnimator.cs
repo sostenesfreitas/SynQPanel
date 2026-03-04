@@ -3,14 +3,12 @@
 namespace SynQPanel.Rendering
 {
     public sealed class FlipAnimator
-
     {
         private float _progress;
         private bool _animating;
         private DateTime _startTime;
 
-        // Duration of flip in seconds (tweak later if needed)
-        private const float Duration = 0.6f;
+        // REMOVED: private const float Duration = 0.6f;
 
         public void Trigger()
         {
@@ -19,15 +17,18 @@ namespace SynQPanel.Rendering
             _startTime = DateTime.UtcNow;
         }
 
-        public float Update()
+        // UPDATED: Accept duration from the item settings
+        public float Update(float durationSeconds)
         {
             if (!_animating)
                 return 1f; // fully settled
 
-            float elapsed =
-                (float)(DateTime.UtcNow - _startTime).TotalSeconds;
+            // Safety check to prevent divide by zero
+            if (durationSeconds <= 0.05f) durationSeconds = 0.05f;
 
-            _progress = elapsed / Duration;
+            float elapsed = (float)(DateTime.UtcNow - _startTime).TotalSeconds;
+
+            _progress = elapsed / durationSeconds;
 
             if (_progress >= 1f)
             {

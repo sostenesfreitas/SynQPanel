@@ -5,6 +5,8 @@ using SynQPanel.Models;
 using SynQPanel.Rendering;
 using System;
 using System.IO;
+using System.Windows.Forms;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Media3D;
 using System.Xml.Serialization;
 
@@ -25,6 +27,13 @@ namespace SynQPanel.Models
         private string _imageFolder = string.Empty;
 
         [ObservableProperty]
+        private FlipStyle _flipStyle = FlipStyle.SplitFlap;
+
+        [ObservableProperty]
+        private int _digitSpacing = 4;  // Spacing between tens/ones in SingleDigit mode
+
+
+        [ObservableProperty]
         private int _previewValue = 0;
 
         [ObservableProperty]
@@ -38,6 +47,18 @@ namespace SynQPanel.Models
 
         [ObservableProperty]
         private float _resolvedFlipProgress;
+
+        // 1. ANIMATION DURATION(Seconds)
+        [ObservableProperty]
+        private float _animationDuration = 0.6f;
+
+        // 2. SHADOW INTENSITY (0.0 to 1.0, multiplier)
+        [ObservableProperty]
+        private float _shadowIntensity = 0.7f;
+
+        // 3. LIGHTING/SHADING INTENSITY (0.0 to 1.0, multiplier)
+        [ObservableProperty]
+        private float _lightingIntensity = 0.4f;
 
         // Runtime cached values (authoritative)
         [XmlIgnore]
@@ -53,12 +74,18 @@ namespace SynQPanel.Models
         public string DisplayName =>
         TimeUnit switch
         {
-            FlipTimeUnit.Second => "Flip · Seconds",
-            FlipTimeUnit.Minute => "Flip · Minutes",
-            FlipTimeUnit.Hour12 => "Flip · Hours (12h)",
-            FlipTimeUnit.Hour24 => "Flip · Hours (24h)",
+            FlipTimeUnit.Second => $"Flip · Seconds ({FlipStyle})",
+            FlipTimeUnit.Minute => $"Flip · Minutes ({FlipStyle})",
+            FlipTimeUnit.Hour12 => $"Flip · Hours 12h ({FlipStyle})",
+            FlipTimeUnit.Hour24 => $"Flip · Hours 24h ({FlipStyle})",
             _ => "Flip"
         };
+
+        partial void OnFlipStyleChanged(FlipStyle value)
+        {
+            OnPropertyChanged(nameof(DisplayName));
+        }
+
 
         [XmlIgnore]
         public bool IsFlip => true;
@@ -166,7 +193,7 @@ namespace SynQPanel.Models
         /// </summary>
         public float GetFlipProgress(int currentValue)
         {
-            // Seconds MUST NOT use animator
+            // Seconds MUST NOT use animator (they are driven by timeflow phase)
             if (TimeUnit == FlipTimeUnit.Second)
                 return 0f;
 
@@ -176,7 +203,8 @@ namespace SynQPanel.Models
                 _lastValue = currentValue;
             }
 
-            return Animator.Update();
+            // Pass the user-configured duration
+            return Animator.Update(AnimationDuration);
         }
         public override void SetProfile(Profile profile)
         {

@@ -5,7 +5,11 @@ using System;
 
 namespace SynQPanel.Rendering
 {
-    internal static class FlipRendererModern
+    /// <summary>
+    /// Single-digit flip renderer (draws ONE digit: 0-9)
+    /// Call twice for tens/ones positions
+    /// </summary>
+    internal static class FlipRendererSingle
     {
         public static void Draw(
             SkiaGraphics g,
@@ -15,9 +19,9 @@ namespace SynQPanel.Rendering
             int y,
             int w,
             int h,
-            int value,
-            int digitCount,
-            string imageFolder,
+            int currentDigit,      // 0-9
+            int nextDigit,         // 0-9
+            bool shouldFlip,       // Is this digit animating?
             float progress,
             float scale,
             string cacheHint,
@@ -37,8 +41,6 @@ namespace SynQPanel.Rendering
                 int dstHalf = halfH;
 
                 float p = Math.Clamp(progress, 0f, 1f);
-
-                // Smooth easing
                 float eased = EaseInOutCubic(p);
 
                 using var paint = new SKPaint
@@ -49,7 +51,7 @@ namespace SynQPanel.Rendering
                 // ================================
                 // LAYER 1: BACK CARD (NEXT TOP HALF)
                 // ================================
-                if (nextLocked != null && nextLocked.Loaded)
+                if (shouldFlip && nextLocked != null && nextLocked.Loaded)
                 {
                     nextLocked.AccessSK(w, h, nextImage =>
                     {
@@ -64,6 +66,7 @@ namespace SynQPanel.Rendering
                 }
                 else
                 {
+                    // Static: show current top half
                     g.Canvas.DrawImage(
                         image,
                         new SKRect(0, 0, image.Width, srcHalf),
@@ -83,6 +86,10 @@ namespace SynQPanel.Rendering
                     sampling,
                     paint
                 );
+
+                // Only animate if shouldFlip is true
+                if (!shouldFlip)
+                    return;
 
                 const float splitPoint = 0.55f;
 
@@ -206,68 +213,69 @@ namespace SynQPanel.Rendering
                 // ================================
                 // HINGE SHADOW (ENHANCED GRADIENT)
                 // ================================
-                float hingeStrength = (float)Math.Sin(eased * Math.PI);
-                
-                // Old: byte hingeAlpha = (byte)(hingeStrength * 150);
-                byte hingeAlpha = (byte)(hingeStrength * 255 * shadowFactor);
-
-                if (hingeAlpha > 5)
+                if (shouldFlip)
                 {
-                    using var shadowShader = SKShader.CreateLinearGradient(
-                        new SKPoint(x, y + dstHalf - 3),
-                        new SKPoint(x, y + dstHalf + 3),
-                        new SKColor[] {
-                            new SKColor(0, 0, 0, 0),
-                            new SKColor(0, 0, 0, hingeAlpha),
-                            new SKColor(0, 0, 0, 0)
-                        },
-                        new float[] { 0f, 0.5f, 1f },
-                        SKShaderTileMode.Clamp
-                    );
-
-                    using var hingePaint = new SKPaint
-                    {
-                        Shader = shadowShader,
-                        IsAntialias = true
-                    };
-
-                    g.Canvas.DrawRect(
-                        new SKRect(x, y + dstHalf - 3, x + w, y + dstHalf + 3),
-                        hingePaint
-                    );
-                }
-
-                // ================================
-                // AMBIENT SHADOW ON FLIPPING CARD
-                // ================================
-                if (p > 0.05f && p < 0.95f)
-                {
-                    float shadowStrength = (float)Math.Sin(eased * Math.PI) * 0.4f;
+                    float hingeStrength = (float)Math.Sin(eased * Math.PI);
                     
-                    // Old: byte shadowAlpha = (byte)(shadowStrength * 100);
-                    byte shadowAlpha = (byte)(shadowStrength * 150 * shadowFactor);
+                    // Old: byte hingeAlpha = (byte)(hingeStrength * 150);
+                    byte hingeAlpha = (byte)(hingeStrength * 255 * shadowFactor);
 
-                    if (shadowAlpha > 5)
+                    if (hingeAlpha > 5)
                     {
-                        using var ambientPaint = new SKPaint
+                        using var shadowShader = SKShader.CreateLinearGradient(
+                            new SKPoint(x, y + dstHalf - 3),
+                            new SKPoint(x, y + dstHalf + 3),
+                            new SKColor[] {
+                                new SKColor(0, 0, 0, 0),
+                                new SKColor(0, 0, 0, hingeAlpha),
+                                new SKColor(0, 0, 0, 0)
+                            },
+                            new float[] { 0f, 0.5f, 1f },
+                            SKShaderTileMode.Clamp
+                        );
+
+                        using var hingePaint = new SKPaint
                         {
-                            Color = new SKColor(0, 0, 0, shadowAlpha),
-                            IsAntialias = true,
-                            ImageFilter = SKImageFilter.CreateBlur(4, 4)
+                            Shader = shadowShader,
+                            IsAntialias = true
                         };
 
-                        float shadowOffset = 4f * shadowStrength;
                         g.Canvas.DrawRect(
-                            new SKRect(x + 2, y + 2 + shadowOffset, x + w - 2, y + h - 2),
-                            ambientPaint
+                            new SKRect(x, y + dstHalf - 3, x + w, y + dstHalf + 3),
+                            hingePaint
                         );
+                    }
+
+                    // Ambient shadow
+                    if (p > 0.05f && p < 0.95f)
+                    {
+                        float shadowStrength = (float)Math.Sin(eased * Math.PI) * 0.4f;
+                        
+                        // Old: byte shadowAlpha = (byte)(shadowStrength * 100);
+                        byte shadowAlpha = (byte)(shadowStrength * 150 * shadowFactor);
+
+                        if (shadowAlpha > 5)
+                        {
+                            using var ambientPaint = new SKPaint
+                            {
+                                Color = new SKColor(0, 0, 0, shadowAlpha),
+                                IsAntialias = true,
+                                ImageFilter = SKImageFilter.CreateBlur(4, 4)
+                            };
+
+                            float shadowOffset = 4f * shadowStrength;
+                            g.Canvas.DrawRect(
+                                new SKRect(x + 2, y + 2 + shadowOffset, x + w - 2, y + h - 2),
+                                ambientPaint
+                            );
+                        }
                     }
                 }
             });
         }
 
         // =====================================
-        // EASING FUNCTIONS
+        // EASING FUNCTIONS (shared with FlipRendererModern)
         // =====================================
         private static float EaseInOutCubic(float t)
         {
