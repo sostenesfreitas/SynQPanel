@@ -1,5 +1,6 @@
 ﻿# tools/eva-panel/04-install-profile.ps1
 $ErrorActionPreference = 'Stop'
+if (Get-Process SynQPanel -ErrorAction SilentlyContinue) { throw 'Feche o SynQPanel antes de instalar.' }
 $GUID = 'ae0a0001-ea01-4b0e-9c0d-202607050001'
 $app = Join-Path $env:LOCALAPPDATA 'SynQPanel'
 $outDir = Join-Path $PSScriptRoot 'out'
