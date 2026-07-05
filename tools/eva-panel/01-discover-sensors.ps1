@@ -22,6 +22,7 @@ if ($lines.Count -eq 0) {
     $sample = $raw.Substring(0, [Math]::Min(2000, $raw.Length))
     $sample | Set-Content (Join-Path $outDir 'raw-sample.txt') -Encoding utf8
     Write-Host "AVISO: 0 sensores casados pelo regex. Amostra salva em out\raw-sample.txt para ajuste do regex."
+    exit 1
 }
 
 $lines | Set-Content (Join-Path $outDir 'sensors.txt') -Encoding utf8
