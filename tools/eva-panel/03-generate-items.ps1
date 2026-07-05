@@ -1,4 +1,4 @@
-# tools/eva-panel/03-generate-items.ps1
+﻿# tools/eva-panel/03-generate-items.ps1
 $ErrorActionPreference = 'Stop'
 $outDir = Join-Path $PSScriptRoot 'out'
 New-Item -ItemType Directory -Force $outDir | Out-Null
