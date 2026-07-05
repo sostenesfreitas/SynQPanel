@@ -180,10 +180,10 @@ function DateItem($x,$y,$size) {
 # sub2 (opcional) fica à direita da sub1, em (cx+380, cy+168).
 # valMult/valDiv (opcionais) aplicam os modificadores ao valor grande
 # (ex.: RAM em MB -> GB com valMult=1024 e valDiv=$true).
-function Cell($label,$cx,$cy,$valId,$valUnit,$valPrec,$sub1Id,$sub1Unit,$sub2Id,$sub2Unit,$barId,$barMax,$barFg,$valMult=1,$valDiv=$false) {
+function Cell($label,$cx,$cy,$valId,$valUnit,$valPrec,$sub1Id,$sub1Unit,$sub2Id,$sub2Unit,$barId,$barMax,$barFg,$valMult=1,$valDiv=$false,$sub1Prec=0,$sub1Mult=1,$sub1Div=$false) {
     $xml  = StaticText $label ($cx+28) ($cy+22) 24 $GREEN
     $xml += SensorText "$label valor" ($cx+28) ($cy+62) 72 $WHITE $valId $valUnit $true $valPrec $valMult $valDiv
-    if ($sub1Id) { $xml += SensorText "$label sub" ($cx+28) ($cy+168) 22 $LILAC $sub1Id $sub1Unit $true 0 }
+    if ($sub1Id) { $xml += SensorText "$label sub" ($cx+28) ($cy+168) 22 $LILAC $sub1Id $sub1Unit $true $sub1Prec $sub1Mult $sub1Div }
     if ($sub2Id) { $xml += SensorText "$label sub2" ($cx+380) ($cy+168) 22 $LILAC $sub2Id $sub2Unit $true 0 }
     if ($barId)  { $xml += Bar "$label bar" ($cx+28) ($cy+210) $barId $barMax $barFg }
     $xml
@@ -248,7 +248,7 @@ $items += SensorText 'Clima cidade' 1520 330 24 $PURPLE '/weather/weather-locati
 $items += CpuCell   96 480
 $items += GpuCell  768 480
 $items += RamCell 1440 480
-$items += Cell 'REDE'  96 762 $S.NetDl 'KB/s' 0 $S.NetUl 'KB/s' $null '' $null 0 $null
+$items += Cell 'REDE'  96 762 $S.NetDl 'MB/s' 1 $S.NetUl 'MB/s' $null '' $null 0 $null 1024 $true 1 1024 $true
 $items += Cell 'DISCO' 768 762 $S.DskTemp '°C' 0 $S.DskAct '%' $null '' $S.DskAct 100 $GREEN
 $items += Cell 'FPS' 1440 762 $S.Fps '' 0 $null '' $null '' $null 0 $null
 
