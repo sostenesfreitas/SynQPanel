@@ -688,8 +688,8 @@ namespace SynQPanel.Extras
 
             // Wind
             _windSpeed.Value = (float)current.GetProperty("wind_speed_10m").GetDouble();
-            int windDegree = current.GetProperty("wind_direction_10m").GetInt32();
-            _windDirection.Value = windDegree;
+            double windDegree = current.GetProperty("wind_direction_10m").GetDouble();
+            _windDirection.Value = (float)windDegree;
             _windDirectionText.Value = DegreesToCompass(windDegree);
             _windGust.Value = (float)current.GetProperty("wind_gusts_10m").GetDouble();
 
