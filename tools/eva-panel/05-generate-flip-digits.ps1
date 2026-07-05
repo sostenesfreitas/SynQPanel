@@ -76,6 +76,7 @@ for ($v = 0; $v -le 59; $v++) {
 
 $font.Dispose(); $sf.Dispose()
 
-$count = (Get-ChildItem $outDir -Filter '*.png' | Measure-Object).Count
-if ($count -ne 60) { throw "Esperados 60 PNGs, gerados $count" }
+$expectedNames = 0..59 | ForEach-Object { '{0:D2}.png' -f $_ }
+$count = (Get-ChildItem $outDir -Filter '*.png' | Where-Object { $expectedNames -contains $_.Name } | Measure-Object).Count
+if ($count -ne 60) { throw "Esperados 60 PNGs (00.png..59.png), encontrados $count" }
 Write-Host "OK: 60 placas split-flap geradas em $outDir"

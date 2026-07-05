@@ -1,11 +1,16 @@
-# tools/eva-panel/02-generate-background.ps1
+﻿# tools/eva-panel/02-generate-background.ps1
+param([string]$SourceImage = 'C:\Users\soste\Downloads\616750.jpg')
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 $outDir = Join-Path $PSScriptRoot 'out'
 New-Item -ItemType Directory -Force $outDir | Out-Null
 
+if (-not (Test-Path $SourceImage)) {
+    throw "Imagem de origem nao encontrada: $SourceImage"
+}
+
 $W = 3840; $H = 1100
-$src = [System.Drawing.Image]::FromFile('C:\Users\soste\Downloads\616750.jpg')
+$src = [System.Drawing.Image]::FromFile($SourceImage)
 
 # Crop: faixa 3,49:1 da imagem, 28% a partir do topo da folga vertical
 $cropH = [int]($src.Width * $H / $W)              # 5563 * 1100/3840 = 1594

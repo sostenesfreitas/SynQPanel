@@ -1,4 +1,4 @@
-# tools/eva-panel/01-discover-sensors.ps1
+﻿# tools/eva-panel/01-discover-sensors.ps1
 # Lê a shared memory do AIDA64 e lista todos os sensores disponíveis.
 $ErrorActionPreference = 'Stop'
 $outDir = Join-Path $PSScriptRoot 'out'
