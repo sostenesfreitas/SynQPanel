@@ -136,12 +136,26 @@ function BgImage($file,$w,$h) {
 "@
 }
 
-# Relógio como ClockDisplayItem (texto). FlipDisplayItem/SplitFlap exige PNGs
-# de dígitos pré-renderizados (00.png..23.png) em ImageFolder — o app não
-# fornece nenhum e o draw aborta com ImageFolder vazio (PanelDraw.cs).
-function Clock($name,$x,$y,$size,$color,$format) {
-    (Head 'ClockDisplayItem' $name 'None' $x $y) + (TextCommon $FONT $size $true $color) + @"
-    <Format>$format</Format>
+# Relógio split-flap animado. Exige as placas 00.png..59.png geradas pelo
+# 05-generate-flip-digits.ps1 e instaladas em assets\<GUID>\flip-digits.
+# ImageFolder NÃO pode ser vazio (PanelDraw.cs aborta o draw) e, sendo
+# relativo, CalculatedImageFolder resolve para assets\<GUID>\<ImageFolder>
+# (FlipDisplayItem.cs).
+function Flip($name,$x,$y,$unit) {
+    (Head 'FlipDisplayItem' $name 'None' $x $y) + @"
+    <Width>210</Width>
+    <Height>270</Height>
+    <ImageFolder>flip-digits</ImageFolder>
+    <FlipStyle>SplitFlap</FlipStyle>
+    <DigitSpacing>6</DigitSpacing>
+    <PreviewValue>0</PreviewValue>
+    <DigitCount>2</DigitCount>
+    <FlipProgress>0</FlipProgress>
+    <ResolvedFlipProgress>0</ResolvedFlipProgress>
+    <AnimationDuration>0.6</AnimationDuration>
+    <ShadowIntensity>0.7</ShadowIntensity>
+    <LightingIntensity>0.4</LightingIntensity>
+    <TimeUnit>$unit</TimeUnit>
   </DisplayItem>
 "@
 }
@@ -167,9 +181,9 @@ $items = @()
 # --- Fundo (precisa ser o PRIMEIRO item: desenhado antes dos demais) ---
 $items += BgImage 'eva-bg.png' 3840 1100
 # --- Zona do relógio ---
-$items += Clock 'Clock HH' 820 110 170 $WHITE 'HH'
+$items += Flip 'Flip HH' 820 110 'Hour24'
 $items += StaticText ':' 1042 140 120 $GREEN
-$items += Clock 'Clock MM' 1090 110 170 $WHITE 'mm'
+$items += Flip 'Flip MM' 1090 110 'Minute'
 $items += DateItem 820 400 34
 # --- Clima (plugin weather) ---
 $items += SensorText 'Clima temp' 1520 120 88 $WHITE '/weather/weather-current/temperature' '°C' $true 0

@@ -5,10 +5,21 @@ $GUID = 'ae0a0001-ea01-4b0e-9c0d-202607050001'
 $app = Join-Path $env:LOCALAPPDATA 'SynQPanel'
 $outDir = Join-Path $PSScriptRoot 'out'
 
-# 1) Fundo -> assets\<GUID>\eva-bg.png
+# 1) Assets (sempre executam, mesmo com o perfil já registrado — o early-exit
+#    de idempotência abaixo só pula o registro no profiles.xml)
+# 1a) Fundo -> assets\<GUID>\eva-bg.png
 $assetDir = Join-Path $app "assets\$GUID"
 New-Item -ItemType Directory -Force $assetDir | Out-Null
 Copy-Item (Join-Path $outDir 'eva-bg.png') (Join-Path $assetDir 'eva-bg.png') -Force
+
+# 1b) Placas do split-flap -> assets\<GUID>\flip-digits\00.png..59.png
+$digitSrc = Join-Path $outDir 'flip-digits'
+if (-not (Test-Path (Join-Path $digitSrc '59.png'))) {
+    throw 'flip-digits nao encontrados - rode 05-generate-flip-digits.ps1 primeiro'
+}
+$digitDst = Join-Path $assetDir 'flip-digits'
+New-Item -ItemType Directory -Force $digitDst | Out-Null
+Copy-Item (Join-Path $digitSrc '*.png') $digitDst -Force
 
 # 2) Display items -> profiles\<GUID>.xml
 Copy-Item (Join-Path $outDir "$GUID.xml") (Join-Path $app "profiles\$GUID.xml") -Force
