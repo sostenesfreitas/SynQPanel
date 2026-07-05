@@ -113,21 +113,35 @@ function Bar($name,$x,$y,$id,$max,$fg) {
 "@
 }
 
-function Flip($name,$x,$y,$unit) {
-    (Head 'FlipDisplayItem' $name 'None' $x $y) + @"
-    <Width>210</Width>
-    <Height>270</Height>
-    <ImageFolder />
-    <FlipStyle>SplitFlap</FlipStyle>
-    <DigitSpacing>6</DigitSpacing>
-    <PreviewValue>0</PreviewValue>
-    <DigitCount>2</DigitCount>
-    <FlipProgress>0</FlipProgress>
-    <ResolvedFlipProgress>0</ResolvedFlipProgress>
-    <AnimationDuration>0.6</AnimationDuration>
-    <ShadowIntensity>0.7</ShadowIntensity>
-    <LightingIntensity>0.4</LightingIntensity>
-    <TimeUnit>$unit</TimeUnit>
+# Fundo do painel como ImageDisplayItem (primeiro item = fundo do z-order).
+# Motivo: PanelDraw só desenha Profile.BackgroundImagePath para imports .rslcd
+# (PanelDraw.cs, checagem isRslcdProfile). RelativePath=true resolve para
+# assets\<GUID>\<FilePath> via ImageDisplayItem.CalculatedPath.
+# Ordem dos elementos copiada da saída real do XmlSerializer (ordem importa).
+function BgImage($file,$w,$h) {
+    (Head 'ImageDisplayItem' $file 'None' 0 0) + @"
+    <Type>FILE</Type>
+    <ReadOnly>false</ReadOnly>
+    <FilePath>$file</FilePath>
+    <RelativePath>true</RelativePath>
+    <Cache>true</Cache>
+    <Scale>100</Scale>
+    <Layer>false</Layer>
+    <LayerColor>#77FFFFFF</LayerColor>
+    <ShowPanel>false</ShowPanel>
+    <Volume>0</Volume>
+    <Width>$w</Width>
+    <Height>$h</Height>
+  </DisplayItem>
+"@
+}
+
+# Relógio como ClockDisplayItem (texto). FlipDisplayItem/SplitFlap exige PNGs
+# de dígitos pré-renderizados (00.png..23.png) em ImageFolder — o app não
+# fornece nenhum e o draw aborta com ImageFolder vazio (PanelDraw.cs).
+function Clock($name,$x,$y,$size,$color,$format) {
+    (Head 'ClockDisplayItem' $name 'None' $x $y) + (TextCommon $FONT $size $true $color) + @"
+    <Format>$format</Format>
   </DisplayItem>
 "@
 }
@@ -150,10 +164,12 @@ function Cell($label,$cx,$cy,$valId,$valUnit,$valPrec,$sub1Id,$sub1Unit,$barId,$
 }
 
 $items = @()
+# --- Fundo (precisa ser o PRIMEIRO item: desenhado antes dos demais) ---
+$items += BgImage 'eva-bg.png' 3840 1100
 # --- Zona do relógio ---
-$items += Flip 'Flip HH' 820 110 'Hour24'
+$items += Clock 'Clock HH' 820 110 170 $WHITE 'HH'
 $items += StaticText ':' 1042 140 120 $GREEN
-$items += Flip 'Flip MM' 1090 110 'Minute'
+$items += Clock 'Clock MM' 1090 110 170 $WHITE 'mm'
 $items += DateItem 820 400 34
 # --- Clima (plugin weather) ---
 $items += SensorText 'Clima temp' 1520 120 88 $WHITE '/weather/weather-current/temperature' '°C' $true 0
