@@ -58,8 +58,12 @@ mockup (opção B): **EVA-01 visível à direita, dashboard de dados à esquerda
 - **AIDA64** com Shared Memory habilitada (já em execução na máquina).
 - **FPS:** requer RTSS (RivaTuner Statistics Server) em execução; sem ele o campo
   fica vazio fora de jogos. Usuário informado.
-- **Clima:** requer chave gratuita do WeatherAPI.com e cidade configuradas em
-  `weather_config.ini` (lido pelo `WeatherPlugin`). Usuário informado.
+- **Clima:** ~~requer chave gratuita do WeatherAPI.com~~ **Alterado em 2026-07-05 por
+  decisão do usuário** (chave WeatherAPI retornava erro 2008 "disabled"): o
+  `WeatherPlugin` será migrado para **Open-Meteo** (sem chave, sem cadastro), com
+  geolocalização automática por IP quando `Location=auto`. Esta é a única alteração
+  de código do app no projeto — o item "Fora de escopo" abaixo fica parcialmente
+  revogado para este fim específico.
 
 ## Verificação
 

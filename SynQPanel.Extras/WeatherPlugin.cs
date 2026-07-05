@@ -1,6 +1,7 @@
-﻿using SynQPanel.Plugins;
+using SynQPanel.Plugins;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -13,16 +14,24 @@ namespace SynQPanel.Extras
 {
     /// <summary>
     /// Weather Plugin for SynQPanel
-    /// Provides comprehensive weather data including current conditions, forecasts,
-    /// air quality, astronomy, and alerts using WeatherAPI.com service.
+    /// Provides comprehensive weather data including current conditions and today's
+    /// forecast using Open-Meteo (https://open-meteo.com), a free service that
+    /// requires no API key. Location is resolved via IP geolocation (ip-api.com) or
+    /// Open-Meteo's geocoding API when a specific place name is configured.
     /// </summary>
     public sealed class WeatherPlugin : BasePlugin
     {
         // Configuration
         private const string CONFIG_FILE = "weather_config.ini";
-        private string? _apiKey;
+        private string? _apiKey; // No longer required (Open-Meteo is free/keyless); kept for backward-compat ini parsing.
         private string? _location;
         private bool _useFahrenheit = false;
+        private string _language = "pt";
+
+        // Resolved location (cached after first successful lookup)
+        private bool _locationResolved = false;
+        private double? _resolvedLatitude;
+        private double? _resolvedLongitude;
 
         // HTTP client for API requests
         private static readonly HttpClient _httpClient = new HttpClient
@@ -190,7 +199,7 @@ namespace SynQPanel.Extras
             : base(
                 "weather",
                 "Weather",
-                "Comprehensive weather information powered by WeatherAPI.com including current conditions, forecasts, air quality, and astronomy data."
+                "Comprehensive weather information powered by Open-Meteo including current conditions, forecasts, air quality, and astronomy data."
             )
         {
             // Initialize Location & Status
@@ -493,23 +502,6 @@ namespace SynQPanel.Extras
             containers.Add(extended);
         }
 
-        [PluginAction("Get API Key")]
-        public void OpenApiKeyPage()
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "https://www.weatherapi.com/signup.aspx",
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex)
-            {
-                _lastError = $"Failed to open browser: {ex.Message}";
-            }
-        }
-
         [PluginAction("Edit Configuration")]
         public void OpenConfigFile()
         {
@@ -538,6 +530,12 @@ namespace SynQPanel.Extras
         [PluginAction("Reload Configuration")]
         public void ReloadConfig()
         {
+            // Reset the cached location resolution so editing Location in the ini
+            // takes effect on the next update instead of requiring an app restart.
+            _locationResolved = false;
+            _resolvedLatitude = null;
+            _resolvedLongitude = null;
+
             LoadConfiguration();
         }
 
@@ -548,12 +546,6 @@ namespace SynQPanel.Extras
 
         public override async Task UpdateAsync(CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(_apiKey) || string.IsNullOrEmpty(_location))
-            {
-                _updateStatus.Value = "Configuration required";
-                return;
-            }
-
             try
             {
                 await FetchWeatherDataAsync(cancellationToken);
@@ -562,6 +554,10 @@ namespace SynQPanel.Extras
                 _lastUpdate.Value = _lastSuccessfulUpdate.ToString("HH:mm:ss");
                 _lastError = string.Empty;
             }
+            catch (OperationCanceledException)
+            {
+                // Shutdown/cancellation requested - not a failure, so don't clobber status.
+            }
             catch (Exception ex)
             {
                 _updateStatus.Value = "Error";
@@ -569,361 +565,601 @@ namespace SynQPanel.Extras
             }
         }
 
+        /// <summary>
+        /// Resolves the configured location to a latitude/longitude pair and populates
+        /// the location-related sensors. The result is cached after the first success
+        /// so subsequent updates skip the geocoding/IP-lookup round trip.
+        /// </summary>
+        private async Task ResolveLocationAsync(CancellationToken cancellationToken)
+        {
+            if (_locationResolved)
+                return;
+
+            var loc = _location?.Trim();
+            bool useIp = string.IsNullOrEmpty(loc)
+                || loc.Equals("auto", StringComparison.OrdinalIgnoreCase)
+                || loc.Equals("auto:ip", StringComparison.OrdinalIgnoreCase);
+
+            if (useIp)
+            {
+                var response = await _httpClient.GetAsync("http://ip-api.com/json", cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+                using var data = JsonDocument.Parse(json);
+                var root = data.RootElement;
+
+                var status = root.TryGetProperty("status", out var statusProp) ? statusProp.GetString() : null;
+                if (status != "success")
+                {
+                    throw new Exception("IP geolocation lookup failed");
+                }
+
+                _resolvedLatitude = root.GetProperty("lat").GetDouble();
+                _resolvedLongitude = root.GetProperty("lon").GetDouble();
+
+                _cityName.Value = root.TryGetProperty("city", out var city) ? city.GetString() ?? "-" : "-";
+                _region.Value = root.TryGetProperty("regionName", out var region) ? region.GetString() ?? "-" : "-";
+                _country.Value = root.TryGetProperty("country", out var country) ? country.GetString() ?? "-" : "-";
+                _timezone.Value = root.TryGetProperty("timezone", out var tz) ? tz.GetString() ?? "-" : "-";
+            }
+            else
+            {
+                string url = "https://geocoding-api.open-meteo.com/v1/search" +
+                    $"?name={Uri.EscapeDataString(loc!)}&count=1&language={Uri.EscapeDataString(_language)}&format=json";
+
+                var response = await _httpClient.GetAsync(url, cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+                using var data = JsonDocument.Parse(json);
+                var root = data.RootElement;
+
+                if (!root.TryGetProperty("results", out var results) || results.GetArrayLength() == 0)
+                {
+                    throw new Exception($"Location '{loc}' not found");
+                }
+
+                var first = results[0];
+                _resolvedLatitude = first.GetProperty("latitude").GetDouble();
+                _resolvedLongitude = first.GetProperty("longitude").GetDouble();
+
+                _cityName.Value = first.TryGetProperty("name", out var name) ? name.GetString() ?? "-" : "-";
+                _region.Value = first.TryGetProperty("admin1", out var admin1) ? admin1.GetString() ?? "-" : "-";
+                _country.Value = first.TryGetProperty("country", out var country) ? country.GetString() ?? "-" : "-";
+                _timezone.Value = first.TryGetProperty("timezone", out var tz) ? tz.GetString() ?? "-" : "-";
+            }
+
+            _latitude.Value = (float)_resolvedLatitude!.Value;
+            _longitude.Value = (float)_resolvedLongitude!.Value;
+            _locationResolved = true;
+        }
+
         private async Task FetchWeatherDataAsync(CancellationToken cancellationToken)
         {
-            string url = $"https://api.weatherapi.com/v1/forecast.json" +
-                        $"?key={_apiKey}" +
-                        $"&q={Uri.EscapeDataString(_location ?? "London")}" +
-                        $"&days=5" +
-                        $"&aqi=yes" +
-                        $"&alerts=no";
+            await ResolveLocationAsync(cancellationToken);
+
+            if (_resolvedLatitude is null || _resolvedLongitude is null)
+                throw new Exception("Location could not be resolved");
+
+            string lat = _resolvedLatitude.Value.ToString(CultureInfo.InvariantCulture);
+            string lon = _resolvedLongitude.Value.ToString(CultureInfo.InvariantCulture);
+
+            string url = "https://api.open-meteo.com/v1/forecast" +
+                $"?latitude={lat}&longitude={lon}" +
+                "&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m,uv_index,visibility" +
+                "&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max,snowfall_sum" +
+                "&hourly=temperature_2m,weather_code,precipitation_probability,relative_humidity_2m,visibility" +
+                "&timezone=auto&forecast_days=7";
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
-
-            // 🔍 DEBUG: Save the full response to a file so we can inspect it
-            try
-            {
-                var debugPath = Path.Combine(
-                    Path.GetDirectoryName(ConfigFilePath ?? "") ?? "",
-                    "weather_response.json"
-                );
-                File.WriteAllText(debugPath, json);
-                System.Diagnostics.Debug.WriteLine($"[Weather] Response saved to: {debugPath}");
-            }
-            catch { }
-
-
-
-            var data = JsonDocument.Parse(json);
+            using var data = JsonDocument.Parse(json);
             var root = data.RootElement;
 
-            // Parse location data
-            if (root.TryGetProperty("location", out var location))
+            // Open-Meteo returns the resolved IANA timezone for the coordinates; prefer it
+            // over the one from geocoding/IP-lookup since it's authoritative for this location.
+            if (root.TryGetProperty("timezone", out var tzProp))
             {
-                _cityName.Value = location.GetProperty("name").GetString() ?? "-";
-                _region.Value = location.GetProperty("region").GetString() ?? "-";
-                _country.Value = location.GetProperty("country").GetString() ?? "-";
-                _latitude.Value = (float)location.GetProperty("lat").GetDouble();
-                _longitude.Value = (float)location.GetProperty("lon").GetDouble();
-                _timezone.Value = location.GetProperty("tz_id").GetString() ?? "-";
-                _localTime.Value = location.GetProperty("localtime").GetString() ?? "-";
+                var tzValue = tzProp.GetString();
+                if (!string.IsNullOrEmpty(tzValue))
+                    _timezone.Value = tzValue;
             }
 
-            // Parse current weather
+            DateTime nowLocal = DateTime.Now;
+
             if (root.TryGetProperty("current", out var current))
             {
                 ParseCurrentWeather(current);
+
+                var currentTimeStr = TryGetString(current, "time");
+                if (!string.IsNullOrEmpty(currentTimeStr)
+                    && DateTime.TryParse(currentTimeStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedNow))
+                {
+                    nowLocal = parsedNow;
+                }
             }
 
-            // Parse forecast
-            if (root.TryGetProperty("forecast", out var forecast))
+            if (root.TryGetProperty("daily", out var daily))
             {
-                if (forecast.TryGetProperty("forecastday", out var forecastDays))
-                {
-                    var daysArray = forecastDays.EnumerateArray().ToArray();
+                ParseDailyForecast(daily);
+            }
 
-                    if (daysArray.Length > 0)
-                    {
-                        ParseTodayForecast(daysArray[0]);
-                        JsonElement? tomorrow = daysArray.Length > 1 ? daysArray[1] : null;
-                        ParseHourlyForecast(daysArray[0], tomorrow);
-                    }
+            if (root.TryGetProperty("hourly", out var hourly))
+            {
+                ParseHourlyForecast(hourly, nowLocal);
+            }
 
-                    if (daysArray.Length > 1)
-                    {
-                        ParseTomorrowForecast(daysArray[1]);
-                    }
+            UpdateMoonPhase();
 
-                    if (daysArray.Length > 2)
-                    {
-                        ParseExtendedForecast(daysArray);
-                    }
-                   // System.Diagnostics.Debug.WriteLine($"[Weather] forecastday count = {daysArray.Length}");
-                   // System.Diagnostics.Debug.WriteLine("[Weather] Day3 JSON: " + daysArray[2].GetRawText());
-                }
-
-
+            // Air quality is fetched separately; a failure here must not break the
+            // main weather update (temperature/condition/etc. already succeeded above).
+            try
+            {
+                await FetchAirQualityAsync(lat, lon, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                // Best-effort: leave air-quality sensors at their previous/default values.
             }
         }
+
+        private async Task FetchAirQualityAsync(string lat, string lon, CancellationToken cancellationToken)
+        {
+            string url = "https://air-quality-api.open-meteo.com/v1/air-quality" +
+                $"?latitude={lat}&longitude={lon}" +
+                "&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi,european_aqi";
+
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            using var data = JsonDocument.Parse(json);
+            var root = data.RootElement;
+
+            if (!root.TryGetProperty("current", out var current))
+                return;
+
+            var pm25 = TryGetDouble(current, "pm2_5");
+            if (pm25.HasValue) _pm2_5.Value = (float)pm25.Value;
+
+            var pm10 = TryGetDouble(current, "pm10");
+            if (pm10.HasValue) _pm10.Value = (float)pm10.Value;
+
+            var co = TryGetDouble(current, "carbon_monoxide");
+            if (co.HasValue) _co.Value = (float)co.Value;
+
+            var no2 = TryGetDouble(current, "nitrogen_dioxide");
+            if (no2.HasValue) _no2.Value = (float)no2.Value;
+
+            var o3 = TryGetDouble(current, "ozone");
+            if (o3.HasValue) _o3.Value = (float)o3.Value;
+
+            var so2 = TryGetDouble(current, "sulphur_dioxide");
+            if (so2.HasValue) _so2.Value = (float)so2.Value;
+
+            var usAqi = TryGetDouble(current, "us_aqi");
+            if (usAqi.HasValue) _aqiUS.Value = (float)usAqi.Value;
+
+            // Open-Meteo does not expose a UK DEFRA index; the European AQI is the
+            // closest available equivalent and is used here as a stand-in.
+            var euAqi = TryGetDouble(current, "european_aqi");
+            if (euAqi.HasValue) _aqiUK.Value = (float)euAqi.Value;
+        }
+
+        private double ConvertTemp(double celsius) => _useFahrenheit ? (celsius * 9.0 / 5.0) + 32.0 : celsius;
 
         private void ParseCurrentWeather(JsonElement current)
         {
             // Temperature
-            _temperature.Value = _useFahrenheit
-                ? (float)current.GetProperty("temp_f").GetDouble()
-                : (float)current.GetProperty("temp_c").GetDouble();
+            var tempC = TryGetDouble(current, "temperature_2m");
+            if (tempC.HasValue) _temperature.Value = (float)ConvertTemp(tempC.Value);
 
-            _feelsLike.Value = _useFahrenheit
-                ? (float)current.GetProperty("feelslike_f").GetDouble()
-                : (float)current.GetProperty("feelslike_c").GetDouble();
+            var feelsC = TryGetDouble(current, "apparent_temperature");
+            if (feelsC.HasValue) _feelsLike.Value = (float)ConvertTemp(feelsC.Value);
 
-            _dewPoint.Value = _useFahrenheit
-                ? (float)current.GetProperty("dewpoint_f").GetDouble()
-                : (float)current.GetProperty("dewpoint_c").GetDouble();
+            var dewC = TryGetDouble(current, "dew_point_2m");
+            if (dewC.HasValue) _dewPoint.Value = (float)ConvertTemp(dewC.Value);
 
-            // Condition
-            if (current.TryGetProperty("condition", out var condition))
+            // Condition (WMO weather code -> localized text)
+            var weatherCode = TryGetInt(current, "weather_code");
+            if (weatherCode.HasValue)
             {
-                _condition.Value = condition.GetProperty("text").GetString() ?? "-";
-                _conditionCode.Value = condition.GetProperty("code").GetInt32();
-                _iconUrl.Value = "https:" + (condition.GetProperty("icon").GetString() ?? "");
+                _condition.Value = GetConditionText(weatherCode.Value, _language);
+                _conditionCode.Value = weatherCode.Value;
             }
 
             // Basic measurements
-            _isDay.Value = current.GetProperty("is_day").GetInt32();
-            _humidity.Value = current.GetProperty("humidity").GetInt32();
-            _cloudCover.Value = current.GetProperty("cloud").GetInt32();
+            var isDay = TryGetInt(current, "is_day");
+            if (isDay.HasValue) _isDay.Value = isDay.Value;
+
+            var humidity = TryGetDouble(current, "relative_humidity_2m");
+            if (humidity.HasValue) _humidity.Value = (float)humidity.Value;
+
+            var cloud = TryGetDouble(current, "cloud_cover");
+            if (cloud.HasValue) _cloudCover.Value = (float)cloud.Value;
 
             // Wind
-            _windSpeed.Value = (float)current.GetProperty("wind_kph").GetDouble();
-            _windDirection.Value = current.GetProperty("wind_degree").GetInt32();
-            _windDirectionText.Value = current.GetProperty("wind_dir").GetString() ?? "-";
-            _windGust.Value = (float)current.GetProperty("gust_kph").GetDouble();
+            var windSpeed = TryGetDouble(current, "wind_speed_10m");
+            if (windSpeed.HasValue) _windSpeed.Value = (float)windSpeed.Value;
+
+            var windDegree = TryGetDouble(current, "wind_direction_10m");
+            if (windDegree.HasValue)
+            {
+                _windDirection.Value = (float)windDegree.Value;
+                _windDirectionText.Value = DegreesToCompass(windDegree.Value);
+            }
+
+            var windGust = TryGetDouble(current, "wind_gusts_10m");
+            if (windGust.HasValue) _windGust.Value = (float)windGust.Value;
 
             // Pressure & Precipitation
-            _pressure.Value = (float)current.GetProperty("pressure_mb").GetDouble();
-            _precipitation.Value = (float)current.GetProperty("precip_mm").GetDouble();
-            _visibility.Value = (float)current.GetProperty("vis_km").GetDouble();
-            _uvIndex.Value = (float)current.GetProperty("uv").GetDouble();
+            var pressure = TryGetDouble(current, "surface_pressure");
+            if (pressure.HasValue) _pressure.Value = (float)pressure.Value;
 
-            // Air Quality
-            if (current.TryGetProperty("air_quality", out var airQuality))
+            var precip = TryGetDouble(current, "precipitation");
+            if (precip.HasValue) _precipitation.Value = (float)precip.Value;
+
+            // UV index & visibility (current conditions)
+            var uv = TryGetDouble(current, "uv_index");
+            if (uv.HasValue) _uvIndex.Value = (float)uv.Value;
+
+            var visibilityMeters = TryGetDouble(current, "visibility");
+            if (visibilityMeters.HasValue) _visibility.Value = (float)(visibilityMeters.Value / 1000.0);
+
+            // Local time (Open-Meteo returns it in the "current.time" field, ISO 8601, local to the timezone)
+            var timeStr = TryGetString(current, "time");
+            if (!string.IsNullOrEmpty(timeStr)
+                && DateTime.TryParse(timeStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
             {
-                if (airQuality.TryGetProperty("us-epa-index", out var aqiUS))
-                    _aqiUS.Value = aqiUS.GetInt32();
-                if (airQuality.TryGetProperty("gb-defra-index", out var aqiUK))
-                    _aqiUK.Value = aqiUK.GetInt32();
-
-                if (airQuality.TryGetProperty("pm2_5", out var pm25))
-                    _pm2_5.Value = (float)pm25.GetDouble();
-                if (airQuality.TryGetProperty("pm10", out var pm10))
-                    _pm10.Value = (float)pm10.GetDouble();
-                if (airQuality.TryGetProperty("co", out var co))
-                    _co.Value = (float)co.GetDouble();
-                if (airQuality.TryGetProperty("no2", out var no2))
-                    _no2.Value = (float)no2.GetDouble();
-                if (airQuality.TryGetProperty("o3", out var o3))
-                    _o3.Value = (float)o3.GetDouble();
-                if (airQuality.TryGetProperty("so2", out var so2))
-                    _so2.Value = (float)so2.GetDouble();
+                _localTime.Value = dt.ToString("yyyy-MM-dd HH:mm");
             }
         }
 
-        private void ParseTodayForecast(JsonElement day)
+        private void ParseDailyForecast(JsonElement daily)
         {
-            // Astronomy
-            if (day.TryGetProperty("astro", out var astro))
-            {
-                _sunrise.Value = astro.GetProperty("sunrise").GetString() ?? "-";
-                _sunset.Value = astro.GetProperty("sunset").GetString() ?? "-";
-                _moonrise.Value = astro.GetProperty("moonrise").GetString() ?? "-";
-                _moonset.Value = astro.GetProperty("moonset").GetString() ?? "-";
-                _moonPhase.Value = astro.GetProperty("moon_phase").GetString() ?? "-";
+            // --- Today (index 0) ---
+            var maxC0 = TryGetArrayDouble(daily, "temperature_2m_max", 0);
+            var minC0 = TryGetArrayDouble(daily, "temperature_2m_min", 0);
 
-                // Fix: moon_illumination is returned as an integer, not string
-                if (astro.TryGetProperty("moon_illumination", out var moonIllum))
+            if (maxC0.HasValue)
+                _maxTemp.Value = (float)ConvertTemp(maxC0.Value);
+
+            if (minC0.HasValue)
+                _minTemp.Value = (float)ConvertTemp(minC0.Value);
+
+            if (maxC0.HasValue && minC0.HasValue)
+                _avgTemp.Value = (float)ConvertTemp((maxC0.Value + minC0.Value) / 2.0);
+
+            var uvMax0 = TryGetArrayDouble(daily, "uv_index_max", 0);
+            if (uvMax0.HasValue)
+                _uvIndexForecast.Value = (float)uvMax0.Value;
+
+            var maxWind0 = TryGetArrayDouble(daily, "wind_speed_10m_max", 0);
+            if (maxWind0.HasValue)
+                _maxWind.Value = (float)maxWind0.Value;
+
+            var precipSum0 = TryGetArrayDouble(daily, "precipitation_sum", 0);
+            if (precipSum0.HasValue)
+                _totalPrecipitation.Value = (float)precipSum0.Value;
+
+            var snowSum0 = TryGetArrayDouble(daily, "snowfall_sum", 0);
+            if (snowSum0.HasValue)
+                _totalSnow.Value = (float)snowSum0.Value;
+
+            var pop0 = TryGetArrayDouble(daily, "precipitation_probability_max", 0);
+            if (pop0.HasValue)
+            {
+                _chanceOfRain.Value = (float)pop0.Value;
+                _chanceOfSnow.Value = (snowSum0.HasValue && snowSum0.Value > 0) ? (float)pop0.Value : 0f;
+            }
+
+            var sunrise = TryGetArrayString(daily, "sunrise", 0);
+            if (sunrise != null && DateTime.TryParse(sunrise, CultureInfo.InvariantCulture, DateTimeStyles.None, out var sunriseDt))
+                _sunrise.Value = sunriseDt.ToString("HH:mm");
+
+            var sunset = TryGetArrayString(daily, "sunset", 0);
+            if (sunset != null && DateTime.TryParse(sunset, CultureInfo.InvariantCulture, DateTimeStyles.None, out var sunsetDt))
+                _sunset.Value = sunsetDt.ToString("HH:mm");
+
+            // --- Tomorrow (index 1) ---
+            var tomorrowDateStr = TryGetArrayString(daily, "time", 1);
+            if (tomorrowDateStr != null && DateTime.TryParse(tomorrowDateStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var tDt))
+                _tomorrowDate.Value = tDt.ToString("yyyy-MM-dd");
+
+            var maxC1 = TryGetArrayDouble(daily, "temperature_2m_max", 1);
+            var minC1 = TryGetArrayDouble(daily, "temperature_2m_min", 1);
+
+            if (maxC1.HasValue)
+                _tomorrowMaxTemp.Value = (float)ConvertTemp(maxC1.Value);
+
+            if (minC1.HasValue)
+                _tomorrowMinTemp.Value = (float)ConvertTemp(minC1.Value);
+
+            if (maxC1.HasValue && minC1.HasValue)
+                _tomorrowAvgTemp.Value = (float)ConvertTemp((maxC1.Value + minC1.Value) / 2.0);
+
+            var code1 = TryGetArrayInt(daily, "weather_code", 1);
+            if (code1.HasValue)
+                _tomorrowCondition.Value = GetConditionText(code1.Value, _language);
+
+            var maxWind1 = TryGetArrayDouble(daily, "wind_speed_10m_max", 1);
+            if (maxWind1.HasValue)
+                _tomorrowMaxWind.Value = (float)maxWind1.Value;
+
+            var precipSum1 = TryGetArrayDouble(daily, "precipitation_sum", 1);
+            if (precipSum1.HasValue)
+                _tomorrowPrecipitation.Value = (float)precipSum1.Value;
+
+            var snowSum1 = TryGetArrayDouble(daily, "snowfall_sum", 1);
+            var pop1 = TryGetArrayDouble(daily, "precipitation_probability_max", 1);
+            if (pop1.HasValue)
+            {
+                _tomorrowChanceOfRain.Value = (float)pop1.Value;
+                _tomorrowChanceOfSnow.Value = (snowSum1.HasValue && snowSum1.Value > 0) ? (float)pop1.Value : 0f;
+            }
+
+            // --- Extended forecast (days 3-5, indices 2-4) ---
+            ApplyExtendedDay(daily, 2, _day3Date, _day3Condition, _day3AvgTemp, _day3ChanceOfRain);
+            ApplyExtendedDay(daily, 3, _day4Date, _day4Condition, _day4AvgTemp, _day4ChanceOfRain);
+            ApplyExtendedDay(daily, 4, _day5Date, _day5Condition, _day5AvgTemp, _day5ChanceOfRain);
+        }
+
+        private void ApplyExtendedDay(JsonElement daily, int index, PluginText dateText, PluginText conditionText, PluginSensor avgTemp, PluginSensor chanceOfRain)
+        {
+            var dateStr = TryGetArrayString(daily, "time", index);
+            if (dateStr != null && DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                dateText.Value = dt.ToString("yyyy-MM-dd");
+
+            var max = TryGetArrayDouble(daily, "temperature_2m_max", index);
+            var min = TryGetArrayDouble(daily, "temperature_2m_min", index);
+            if (max.HasValue && min.HasValue)
+                avgTemp.Value = (float)ConvertTemp((max.Value + min.Value) / 2.0);
+
+            var code = TryGetArrayInt(daily, "weather_code", index);
+            if (code.HasValue)
+                conditionText.Value = GetConditionText(code.Value, _language);
+
+            var pop = TryGetArrayDouble(daily, "precipitation_probability_max", index);
+            if (pop.HasValue)
+                chanceOfRain.Value = (float)pop.Value;
+        }
+
+        private void ParseHourlyForecast(JsonElement hourly, DateTime nowLocal)
+        {
+            if (!hourly.TryGetProperty("time", out var timeArr) || timeArr.ValueKind != JsonValueKind.Array)
+                return;
+
+            int len = timeArr.GetArrayLength();
+
+            // The hourly series starts at local midnight of the current day (Open-Meteo,
+            // timezone=auto), so the first 24 entries correspond to "today" - use them to
+            // compute today's forecast averages that Open-Meteo doesn't provide directly.
+            int todayCount = Math.Min(24, len);
+            if (todayCount > 0)
+            {
+                double humSum = 0; int humCount = 0;
+                double visSum = 0; int visCount = 0;
+
+                for (int i = 0; i < todayCount; i++)
                 {
-                    _moonIllumination.Value = moonIllum.ValueKind == JsonValueKind.String
-                        ? float.Parse(moonIllum.GetString() ?? "0")
-                        : (float)moonIllum.GetDouble();
+                    var h = TryGetArrayDouble(hourly, "relative_humidity_2m", i);
+                    if (h.HasValue) { humSum += h.Value; humCount++; }
+
+                    var v = TryGetArrayDouble(hourly, "visibility", i);
+                    if (v.HasValue) { visSum += v.Value; visCount++; }
+                }
+
+                if (humCount > 0)
+                    _avgHumidity.Value = (float)(humSum / humCount);
+
+                if (visCount > 0)
+                    _avgVisibility.Value = (float)((visSum / visCount) / 1000.0);
+            }
+
+            // Find the first hourly slot at/after "now" (in the location's local time).
+            int startIndex = -1;
+            for (int i = 0; i < len; i++)
+            {
+                var tStr = TryGetArrayString(hourly, "time", i);
+                if (tStr != null
+                    && DateTime.TryParse(tStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var t)
+                    && t >= nowLocal)
+                {
+                    startIndex = i;
+                    break;
                 }
             }
 
-            // Day forecast
-            if (day.TryGetProperty("day", out var dayData))
+            if (startIndex < 0)
+                return;
+
+            var timeSlots = new[] { _hour1Time, _hour2Time, _hour3Time, _hour4Time, _hour5Time, _hour6Time };
+            var tempSlots = new[] { _hour1Temp, _hour2Temp, _hour3Temp, _hour4Temp, _hour5Temp, _hour6Temp };
+            var rainSlots = new[] { _hour1ChanceOfRain, _hour2ChanceOfRain, _hour3ChanceOfRain, _hour4ChanceOfRain, _hour5ChanceOfRain, _hour6ChanceOfRain };
+
+            for (int s = 0; s < timeSlots.Length; s++)
             {
-                _maxTemp.Value = _useFahrenheit
-                    ? (float)dayData.GetProperty("maxtemp_f").GetDouble()
-                    : (float)dayData.GetProperty("maxtemp_c").GetDouble();
+                int idx = startIndex + s;
+                if (idx >= len)
+                    break;
 
-                _minTemp.Value = _useFahrenheit
-                    ? (float)dayData.GetProperty("mintemp_f").GetDouble()
-                    : (float)dayData.GetProperty("mintemp_c").GetDouble();
+                var tStr = TryGetArrayString(hourly, "time", idx);
+                if (tStr != null && DateTime.TryParse(tStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var t))
+                    timeSlots[s].Value = t.ToString("HH:mm");
 
-                _avgTemp.Value = _useFahrenheit
-                    ? (float)dayData.GetProperty("avgtemp_f").GetDouble()
-                    : (float)dayData.GetProperty("avgtemp_c").GetDouble();
+                var temp = TryGetArrayDouble(hourly, "temperature_2m", idx);
+                if (temp.HasValue)
+                    tempSlots[s].Value = (float)ConvertTemp(temp.Value);
 
-                _maxWind.Value = (float)dayData.GetProperty("maxwind_kph").GetDouble();
-                _totalPrecipitation.Value = (float)dayData.GetProperty("totalprecip_mm").GetDouble();
+                var pop = TryGetArrayDouble(hourly, "precipitation_probability", idx);
+                if (pop.HasValue)
+                    rainSlots[s].Value = (float)pop.Value;
 
-                if (dayData.TryGetProperty("totalsnow_cm", out var snow))
-                    _totalSnow.Value = (float)snow.GetDouble();
-
-                _avgVisibility.Value = (float)dayData.GetProperty("avgvis_km").GetDouble();
-                _avgHumidity.Value = (float)dayData.GetProperty("avghumidity").GetDouble();
-
-                // ✅ CORRECT: These are already 0-100 percentages
-                if (dayData.TryGetProperty("daily_chance_of_rain", out var rainChance))
-                    _chanceOfRain.Value = (float)rainChance.GetDouble();
-
-                if (dayData.TryGetProperty("daily_chance_of_snow", out var snowChance))
-                    _chanceOfSnow.Value = (float)snowChance.GetDouble();
-
-                _uvIndexForecast.Value = (float)dayData.GetProperty("uv").GetDouble();
+                // Note: hourN_icon_url sensors stay unpopulated - Open-Meteo provides no
+                // icon/CDN URLs (same as the current/tomorrow/day3-5 icon_url sensors),
+                // and nothing else in the codebase consumes these keys.
             }
         }
 
-        private void ParseTomorrowForecast(JsonElement day)
+        /// <summary>
+        /// Open-Meteo does not provide moon-phase data, so it is computed locally from
+        /// the synodic month length relative to a known new moon reference date.
+        /// Moonrise/moonset are left unpopulated (would require a full astronomical
+        /// rise/set calculation, out of scope here).
+        /// </summary>
+        private void UpdateMoonPhase()
         {
-            if (day.TryGetProperty("date", out var dateProp))
+            var knownNewMoonUtc = new DateTime(2000, 1, 6, 18, 14, 0, DateTimeKind.Utc);
+            const double synodicMonthDays = 29.53058867;
+
+            double daysSinceNewMoon = (DateTime.UtcNow - knownNewMoonUtc).TotalDays;
+            double phase = daysSinceNewMoon / synodicMonthDays;
+            phase -= Math.Floor(phase); // normalize to [0, 1)
+
+            double illuminationPercent = (1.0 - Math.Cos(2.0 * Math.PI * phase)) / 2.0 * 100.0;
+
+            _moonIllumination.Value = (float)illuminationPercent;
+            _moonPhase.Value = GetMoonPhaseName(phase, _language);
+        }
+
+        private static string GetMoonPhaseName(double phase, string language)
+        {
+            bool pt = string.Equals(language, "pt", StringComparison.OrdinalIgnoreCase);
+
+            if (phase < 0.03 || phase >= 0.97) return pt ? "Lua Nova" : "New Moon";
+            if (phase < 0.22) return pt ? "Lua Crescente" : "Waxing Crescent";
+            if (phase < 0.28) return pt ? "Quarto Crescente" : "First Quarter";
+            if (phase < 0.47) return pt ? "Lua Crescente Gibosa" : "Waxing Gibbous";
+            if (phase < 0.53) return pt ? "Lua Cheia" : "Full Moon";
+            if (phase < 0.72) return pt ? "Lua Minguante Gibosa" : "Waning Gibbous";
+            if (phase < 0.78) return pt ? "Quarto Minguante" : "Last Quarter";
+            return pt ? "Lua Minguante" : "Waning Crescent";
+        }
+
+        private static double? TryGetDouble(JsonElement parent, string propertyName)
+        {
+            if (parent.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.Number)
+                return prop.GetDouble();
+            return null;
+        }
+
+        private static int? TryGetInt(JsonElement parent, string propertyName)
+        {
+            if (parent.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.Number)
+                return prop.GetInt32();
+            return null;
+        }
+
+        private static string? TryGetString(JsonElement parent, string propertyName)
+        {
+            if (parent.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.String)
+                return prop.GetString();
+            return null;
+        }
+
+        private static double? TryGetArrayDouble(JsonElement parent, string propertyName, int index)
+        {
+            if (parent.TryGetProperty(propertyName, out var arr)
+                && arr.ValueKind == JsonValueKind.Array
+                && arr.GetArrayLength() > index
+                && arr[index].ValueKind == JsonValueKind.Number)
             {
-                var dateStr = dateProp.GetString() ?? "-";
-                if (DateTime.TryParse(dateStr, out var dt))
-                    _tomorrowDate.Value = dt.ToString("ddd dd");
-                else
-                    _tomorrowDate.Value = dateStr;
+                return arr[index].GetDouble();
             }
+            return null;
+        }
 
-            if (day.TryGetProperty("day", out var dayData))
+        private static int? TryGetArrayInt(JsonElement parent, string propertyName, int index)
+        {
+            if (parent.TryGetProperty(propertyName, out var arr)
+                && arr.ValueKind == JsonValueKind.Array
+                && arr.GetArrayLength() > index
+                && arr[index].ValueKind == JsonValueKind.Number)
             {
-                _tomorrowMaxTemp.Value = _useFahrenheit
-                    ? (float)dayData.GetProperty("maxtemp_f").GetDouble()
-                    : (float)dayData.GetProperty("maxtemp_c").GetDouble();
+                return arr[index].GetInt32();
+            }
+            return null;
+        }
 
-                _tomorrowMinTemp.Value = _useFahrenheit
-                    ? (float)dayData.GetProperty("mintemp_f").GetDouble()
-                    : (float)dayData.GetProperty("mintemp_c").GetDouble();
+        private static string? TryGetArrayString(JsonElement parent, string propertyName, int index)
+        {
+            if (parent.TryGetProperty(propertyName, out var arr)
+                && arr.ValueKind == JsonValueKind.Array
+                && arr.GetArrayLength() > index
+                && arr[index].ValueKind == JsonValueKind.String)
+            {
+                return arr[index].GetString();
+            }
+            return null;
+        }
 
-                _tomorrowAvgTemp.Value = _useFahrenheit
-                    ? (float)dayData.GetProperty("avgtemp_f").GetDouble()
-                    : (float)dayData.GetProperty("avgtemp_c").GetDouble();
+        /// <summary>Maps WMO weather codes (used by Open-Meteo) to localized condition text.</summary>
+        private static string GetConditionText(int code, string language)
+        {
+            bool pt = string.Equals(language, "pt", StringComparison.OrdinalIgnoreCase);
 
-                if (dayData.TryGetProperty("condition", out var condition))
+            if (pt)
+            {
+                return code switch
                 {
-                    _tomorrowCondition.Value = condition.GetProperty("text").GetString() ?? "-";
-                    _tomorrowIconUrl.Value = "https:" + (condition.GetProperty("icon").GetString() ?? "");
-                }
-
-                if (dayData.TryGetProperty("condition", out var todayCondition))
-                {
-                    _todayIconUrl.Value = "https:" + (todayCondition.GetProperty("icon").GetString() ?? "");
-                }
-
-                _tomorrowMaxWind.Value = (float)dayData.GetProperty("maxwind_kph").GetDouble();
-                _tomorrowPrecipitation.Value = (float)dayData.GetProperty("totalprecip_mm").GetDouble();
-
-                // ✅ CORRECT: These are already 0-100 percentages
-                if (dayData.TryGetProperty("daily_chance_of_rain", out var rainChance))
-                    _tomorrowChanceOfRain.Value = (float)rainChance.GetDouble();
-
-                if (dayData.TryGetProperty("daily_chance_of_snow", out var snowChance))
-                    _tomorrowChanceOfSnow.Value = (float)snowChance.GetDouble();
+                    0 => "Céu limpo",
+                    1 => "Predominantemente limpo",
+                    2 => "Parcialmente nublado",
+                    3 => "Nublado",
+                    45 or 48 => "Nevoeiro",
+                    51 or 53 or 55 => "Garoa",
+                    56 or 57 => "Garoa congelante",
+                    61 => "Chuva fraca",
+                    63 => "Chuva moderada",
+                    65 => "Chuva forte",
+                    66 or 67 => "Chuva congelante",
+                    71 or 73 or 75 => "Neve",
+                    77 => "Grãos de neve",
+                    80 or 81 or 82 => "Pancadas de chuva",
+                    85 or 86 => "Pancadas de neve",
+                    95 => "Trovoada",
+                    96 or 99 => "Trovoada com granizo",
+                    _ => $"Código {code}"
+                };
             }
+
+            return code switch
+            {
+                0 => "Clear sky",
+                1 => "Mainly clear",
+                2 => "Partly cloudy",
+                3 => "Overcast",
+                45 or 48 => "Fog",
+                51 or 53 or 55 => "Drizzle",
+                56 or 57 => "Freezing drizzle",
+                61 => "Light rain",
+                63 => "Moderate rain",
+                65 => "Heavy rain",
+                66 or 67 => "Freezing rain",
+                71 or 73 or 75 => "Snow",
+                77 => "Snow grains",
+                80 or 81 or 82 => "Rain showers",
+                85 or 86 => "Snow showers",
+                95 => "Thunderstorm",
+                96 or 99 => "Thunderstorm with hail",
+                _ => $"Code {code}"
+            };
         }
 
-        private void ParseHourlyForecast(JsonElement todayDay, JsonElement? tomorrowDay)
+        private static string DegreesToCompass(double degrees)
         {
-            var allUpcomingHours = new List<JsonElement>();
-            var currentHour = DateTime.Now.Hour;
-
-            if (todayDay.TryGetProperty("hour", out var todayHours))
-            {
-                var todayRemaining = todayHours.EnumerateArray()
-                    .Where(h =>
-                    {
-                        var hourTime = h.GetProperty("time").GetString() ?? "";
-                        var hour = int.Parse(hourTime.Split(' ')[1].Split(':')[0]);
-                        return hour >= currentHour;
-                    })
-                    .ToList();
-
-                allUpcomingHours.AddRange(todayRemaining);
-            }
-
-            if (allUpcomingHours.Count < 6 && tomorrowDay.HasValue)
-            {
-                if (tomorrowDay.Value.TryGetProperty("hour", out var tomorrowHours))
-                {
-                    var needed = 6 - allUpcomingHours.Count;
-                    allUpcomingHours.AddRange(tomorrowHours.EnumerateArray().Take(needed));
-                }
-            }
-
-            if (allUpcomingHours.Count > 0) ParseHourData(allUpcomingHours[0], _hour1Time, _hour1IconUrl, _hour1Temp, _hour1ChanceOfRain);
-            if (allUpcomingHours.Count > 1) ParseHourData(allUpcomingHours[1], _hour2Time, _hour2IconUrl, _hour2Temp, _hour2ChanceOfRain);
-            if (allUpcomingHours.Count > 2) ParseHourData(allUpcomingHours[2], _hour3Time, _hour3IconUrl, _hour3Temp, _hour3ChanceOfRain);
-            if (allUpcomingHours.Count > 3) ParseHourData(allUpcomingHours[3], _hour4Time, _hour4IconUrl, _hour4Temp, _hour4ChanceOfRain);
-            if (allUpcomingHours.Count > 4) ParseHourData(allUpcomingHours[4], _hour5Time, _hour5IconUrl, _hour5Temp, _hour5ChanceOfRain);
-            if (allUpcomingHours.Count > 5) ParseHourData(allUpcomingHours[5], _hour6Time, _hour6IconUrl, _hour6Temp, _hour6ChanceOfRain);
+            string[] directions = { "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW" };
+            int index = (int)Math.Round(degrees / 22.5, MidpointRounding.AwayFromZero) % 16;
+            if (index < 0) index += 16;
+            return directions[index];
         }
-
-        private void ParseHourData(
-            JsonElement hour,
-            PluginText timeField,
-            PluginText iconField,
-            PluginSensor tempField,
-            PluginSensor chanceOfRainField)
-        {
-            timeField.Value = hour.GetProperty("time").GetString()?.Split(' ')[1] ?? "-";
-
-            if (hour.TryGetProperty("condition", out var condition))
-            {
-                iconField.Value = "https:" + (condition.GetProperty("icon").GetString() ?? "");
-            }
-
-            tempField.Value = _useFahrenheit
-                ? (float)hour.GetProperty("temp_f").GetDouble()
-                : (float)hour.GetProperty("temp_c").GetDouble();
-
-            if (hour.TryGetProperty("chance_of_rain", out var rainChance))
-                chanceOfRainField.Value = (float)rainChance.GetDouble();
-        }
-
-
-        private void ParseExtendedForecast(JsonElement[] daysArray)
-        {
-            // daysArray[0] = today, [1] = tomorrow, [2].. = extended
-            if (daysArray.Length > 2)
-                FillExtendedDay(daysArray[2], _day3Date, _day3Condition, _day3IconUrl, _day3AvgTemp, _day3ChanceOfRain);
-
-            if (daysArray.Length > 3)
-                FillExtendedDay(daysArray[3], _day4Date, _day4Condition, _day4IconUrl, _day4AvgTemp, _day4ChanceOfRain);
-
-            if (daysArray.Length > 4)
-                FillExtendedDay(daysArray[4], _day5Date, _day5Condition, _day5IconUrl, _day5AvgTemp, _day5ChanceOfRain);
-        }
-
-        private void FillExtendedDay(
-            JsonElement day,
-            PluginText dateField,
-            PluginText conditionField,
-            PluginText iconField,
-            PluginSensor avgTempField,
-            PluginSensor chanceOfRainField)
-        {
-            if (day.TryGetProperty("date", out var dateProp))
-            {
-                var dateStr = dateProp.GetString() ?? "-";
-                // You can keep raw yyyy-MM-dd or format it:
-                if (DateTime.TryParse(dateStr, out var dt))
-                    dateField.Value = dt.ToString("ddd dd");
-                else
-                    dateField.Value = dateStr;
-            }
-
-            if (day.TryGetProperty("day", out var dayData))
-            {
-                if (dayData.TryGetProperty("condition", out var cond))
-                {
-                    conditionField.Value = cond.GetProperty("text").GetString() ?? "-";
-                    iconField.Value = "https:" + (cond.GetProperty("icon").GetString() ?? "");
-                }
-
-                avgTempField.Value = _useFahrenheit
-                    ? (float)dayData.GetProperty("avgtemp_f").GetDouble()
-                    : (float)dayData.GetProperty("avgtemp_c").GetDouble();
-
-                if (dayData.TryGetProperty("daily_chance_of_rain", out var rainChance))
-                    chanceOfRainField.Value = (float)rainChance.GetDouble();
-            }
-        }
-
-
-
 
         private void LoadConfiguration()
         {
@@ -951,6 +1187,7 @@ namespace SynQPanel.Extras
                     switch (key.ToLower())
                     {
                         case "apikey":
+                            // No longer required by Open-Meteo; parsed for backward compatibility only.
                             _apiKey = value;
                             break;
                         case "location":
@@ -959,8 +1196,17 @@ namespace SynQPanel.Extras
                         case "usefahrenheit":
                             _useFahrenheit = value.ToLower() == "true" || value == "1";
                             break;
+                        case "language":
+                            _language = string.IsNullOrWhiteSpace(value) ? "pt" : value.Trim().ToLowerInvariant();
+                            break;
                     }
                 }
+
+                if (string.IsNullOrWhiteSpace(_location))
+                    _location = "auto";
+
+                if (string.IsNullOrWhiteSpace(_language))
+                    _language = "pt";
             }
             catch (Exception ex)
             {
@@ -976,20 +1222,23 @@ namespace SynQPanel.Extras
                     return;
 
                 var defaultConfig = @"# SynQPanel Weather Plugin Configuration
-                # Get your free API key from: https://www.weatherapi.com/signup.aspx
+# Powered by Open-Meteo (https://open-meteo.com) - free, no API key required.
 
-                # Your WeatherAPI.com API Key (Required)
-                APIKey=YOUR_API_KEY_HERE
+# Location: a city name, or 'auto'/'auto:ip' to geolocate via IP address.
+# Examples: London, Sao Paulo, auto, auto:ip
+Location=auto
 
-                # Location (city name, zip code, coordinates, IP address)
-                # Examples: London, New Delhi, 10001, 48.8567,2.3508, auto:ip
-                Location=London
+# Temperature Unit (true for Fahrenheit, false for Celsius)
+UseFahrenheit=false
 
-                # Temperature Unit (true for Fahrenheit, false for Celsius)
-                UseFahrenheit=false
-                ";
+# Language for condition text, moon phase names, and geocoding results.
+# Supported: pt (Portuguese, default), en (English)
+Language=pt
+";
 
                 File.WriteAllText(ConfigFilePath, defaultConfig);
+                _location = "auto";
+                _language = "pt";
             }
             catch (Exception ex)
             {
