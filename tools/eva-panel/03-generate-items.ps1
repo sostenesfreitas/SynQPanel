@@ -11,7 +11,8 @@ $S = @{}
 foreach ($line in Get-Content $mapPath) {
     if ($line -match '^\s*([A-Za-z]+)\s*=\s*(\S+)') { $S[$Matches[1]] = $Matches[2] }
 }
-foreach ($k in 'CpuTemp','CpuClk','CpuUti','GpuTemp','GpuUti','GpuClk','RamUsed','RamUti','NetDl','NetUl','DskTemp','DskAct','Fps') {
+foreach ($k in 'CpuTemp','CpuClk','CpuUti','GpuTemp','GpuUti','GpuClk','RamUsed','RamUti','NetDl','NetUl','DskTemp','DskAct','Fps',
+               'CpuPwr','CpuVolt','CpuFan','GpuPwr','GpuFan','VramUsed','VramClk','RamFree','VirtUsed','VirtUti') {
     if (-not $S.ContainsKey($k)) { throw "sensor-map.txt sem a chave $k" }
 }
 
@@ -188,6 +189,49 @@ function Cell($label,$cx,$cy,$valId,$valUnit,$valPrec,$sub1Id,$sub1Unit,$sub2Id,
     $xml
 }
 
+# Células ricas da linha superior (estilo sensorpanel clássico do AIDA64).
+# Geometria dentro da célula 640x250:
+#   rótulo cy+22 (22px) · valor grande cy+58 (56px) · linhas de detalhe
+#   cy+132 / cy+162 / cy+192 (19px) · barra cy+210 (GPU: cy+226, tem 3 linhas)
+function CpuCell($cx,$cy) {
+    $xml  = StaticText 'CPU · RYZEN 9 5900X' ($cx+28) ($cy+22) 22 $GREEN
+    $xml += SensorText 'CPU temp' ($cx+28)  ($cy+58)  56 $WHITE $S.CpuTemp '°C' $true 1
+    $xml += SensorText 'CPU clk'  ($cx+28)  ($cy+132) 19 $LILAC $S.CpuClk 'MHz' $true 0
+    $xml += SensorText 'CPU uso'  ($cx+200) ($cy+132) 19 $LILAC $S.CpuUti '%'   $true 0
+    $xml += SensorText 'CPU pwr'  ($cx+28)  ($cy+162) 19 $LILAC $S.CpuPwr 'W'   $true 0
+    $xml += SensorText 'CPU volt' ($cx+180) ($cy+162) 19 $LILAC $S.CpuVolt 'V'  $true 2
+    $xml += SensorText 'CPU fan'  ($cx+360) ($cy+162) 19 $LILAC $S.CpuFan 'RPM' $true 0
+    $xml += Bar 'CPU bar' ($cx+28) ($cy+210) $S.CpuUti 100 $GREEN
+    $xml
+}
+
+function GpuCell($cx,$cy) {
+    $xml  = StaticText 'GPU · RTX 3080' ($cx+28) ($cy+22) 22 $GREEN
+    $xml += SensorText 'GPU temp'   ($cx+28)  ($cy+58)  56 $WHITE $S.GpuTemp '°C' $true 1
+    $xml += SensorText 'GPU clk'    ($cx+28)  ($cy+132) 19 $LILAC $S.GpuClk 'MHz' $true 0
+    $xml += SensorText 'GPU uso'    ($cx+200) ($cy+132) 19 $LILAC $S.GpuUti '%'   $true 0
+    $xml += SensorText 'GPU pwr'    ($cx+28)  ($cy+162) 19 $LILAC $S.GpuPwr 'W'   $true 0
+    $xml += SensorText 'GPU fan'    ($cx+180) ($cy+162) 19 $LILAC $S.GpuFan 'RPM' $true 0
+    $xml += StaticText 'VRAM'       ($cx+28)  ($cy+192) 19 $PURPLE
+    $xml += SensorText 'VRAM usada' ($cx+100) ($cy+192) 19 $LILAC $S.VramUsed 'MB' $true 0
+    $xml += SensorText 'VRAM clk'   ($cx+280) ($cy+192) 19 $LILAC $S.VramClk 'MHz' $true 0
+    $xml += Bar 'GPU bar' ($cx+28) ($cy+226) $S.GpuUti 100 $ORANGE
+    $xml
+}
+
+function RamCell($cx,$cy) {
+    $xml  = StaticText 'RAM · 32GB' ($cx+28) ($cy+22) 22 $GREEN
+    $xml += SensorText 'RAM valor'  ($cx+28)  ($cy+58)  56 $WHITE $S.RamUsed 'GB' $true 1 1024 $true
+    $xml += SensorText 'RAM uso'    ($cx+28)  ($cy+132) 19 $LILAC $S.RamUti '%' $true 0
+    $xml += StaticText 'LIVRE'      ($cx+140) ($cy+132) 19 $PURPLE
+    $xml += SensorText 'RAM livre'  ($cx+230) ($cy+132) 19 $LILAC $S.RamFree 'GB' $true 1 1024 $true
+    $xml += StaticText 'VIRT'       ($cx+28)  ($cy+162) 19 $PURPLE
+    $xml += SensorText 'VIRT usada' ($cx+100) ($cy+162) 19 $LILAC $S.VirtUsed 'GB' $true 1 1024 $true
+    $xml += SensorText 'VIRT uso'   ($cx+250) ($cy+162) 19 $LILAC $S.VirtUti '%' $true 0
+    $xml += Bar 'RAM bar' ($cx+28) ($cy+210) $S.RamUti 100 $PURPLE
+    $xml
+}
+
 $items = @()
 # --- Fundo (precisa ser o PRIMEIRO item: desenhado antes dos demais) ---
 $items += BgImage 'eva-bg.png' 3840 1100
@@ -200,10 +244,10 @@ $items += DateItem 820 400 34
 $items += SensorText 'Clima temp' 1520 120 88 $WHITE '/weather/weather-current/temperature' '°C' $true 0
 $items += SensorText 'Clima cond' 1520 270 32 $LILAC '/weather/weather-current/condition' '' $false 0
 $items += SensorText 'Clima cidade' 1520 330 24 $PURPLE '/weather/weather-location/city_name' '' $false 0
-# --- Grade 3x2 ---
-$items += Cell 'CPU'   96 480 $S.CpuTemp '°C' 1 $S.CpuClk 'MHz' $S.CpuUti '%' $S.CpuUti 100 $GREEN
-$items += Cell 'GPU'  768 480 $S.GpuTemp '°C' 1 $S.GpuClk 'MHz' $S.GpuUti '%' $S.GpuUti 100 $ORANGE
-$items += Cell 'RAM' 1440 480 $S.RamUsed 'GB' 1 $S.RamUti '%' $null '' $S.RamUti 100 $PURPLE 1024 $true
+# --- Grade 3x2 (linha superior: células ricas) ---
+$items += CpuCell   96 480
+$items += GpuCell  768 480
+$items += RamCell 1440 480
 $items += Cell 'REDE'  96 762 $S.NetDl 'KB/s' 0 $S.NetUl 'KB/s' $null '' $null 0 $null
 $items += Cell 'DISCO' 768 762 $S.DskTemp '°C' 0 $S.DskAct '%' $null '' $S.DskAct 100 $GREEN
 $items += Cell 'FPS' 1440 762 $S.Fps '' 0 $null '' $null '' $null 0 $null
