@@ -1,4 +1,4 @@
-﻿using SynQPanel.Plugins;
+using SynQPanel.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -26,6 +26,7 @@ namespace SynQPanel.Extras
         private string? _apiKey; // No longer required (Open-Meteo is free/keyless); kept for backward-compat ini parsing.
         private string? _location;
         private bool _useFahrenheit = false;
+        private string _language = "pt";
 
         // Resolved location (cached after first successful lookup)
         private bool _locationResolved = false;
@@ -198,7 +199,7 @@ namespace SynQPanel.Extras
             : base(
                 "weather",
                 "Weather",
-                "Comprehensive weather information powered by WeatherAPI.com including current conditions, forecasts, air quality, and astronomy data."
+                "Comprehensive weather information powered by Open-Meteo including current conditions, forecasts, air quality, and astronomy data."
             )
         {
             // Initialize Location & Status
@@ -529,6 +530,12 @@ namespace SynQPanel.Extras
         [PluginAction("Reload Configuration")]
         public void ReloadConfig()
         {
+            // Reset the cached location resolution so editing Location in the ini
+            // takes effect on the next update instead of requiring an app restart.
+            _locationResolved = false;
+            _resolvedLatitude = null;
+            _resolvedLongitude = null;
+
             LoadConfiguration();
         }
 
@@ -546,6 +553,10 @@ namespace SynQPanel.Extras
                 _lastSuccessfulUpdate = DateTime.Now;
                 _lastUpdate.Value = _lastSuccessfulUpdate.ToString("HH:mm:ss");
                 _lastError = string.Empty;
+            }
+            catch (OperationCanceledException)
+            {
+                // Shutdown/cancellation requested - not a failure, so don't clobber status.
             }
             catch (Exception ex)
             {
@@ -575,7 +586,7 @@ namespace SynQPanel.Extras
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
-                var data = JsonDocument.Parse(json);
+                using var data = JsonDocument.Parse(json);
                 var root = data.RootElement;
 
                 var status = root.TryGetProperty("status", out var statusProp) ? statusProp.GetString() : null;
@@ -595,13 +606,13 @@ namespace SynQPanel.Extras
             else
             {
                 string url = "https://geocoding-api.open-meteo.com/v1/search" +
-                    $"?name={Uri.EscapeDataString(loc!)}&count=1&language=pt&format=json";
+                    $"?name={Uri.EscapeDataString(loc!)}&count=1&language={Uri.EscapeDataString(_language)}&format=json";
 
                 var response = await _httpClient.GetAsync(url, cancellationToken);
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
-                var data = JsonDocument.Parse(json);
+                using var data = JsonDocument.Parse(json);
                 var root = data.RootElement;
 
                 if (!root.TryGetProperty("results", out var results) || results.GetArrayLength() == 0)
@@ -636,15 +647,16 @@ namespace SynQPanel.Extras
 
             string url = "https://api.open-meteo.com/v1/forecast" +
                 $"?latitude={lat}&longitude={lon}" +
-                "&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m" +
-                "&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max" +
-                "&timezone=auto&forecast_days=1";
+                "&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m,uv_index,visibility" +
+                "&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max,snowfall_sum" +
+                "&hourly=temperature_2m,weather_code,precipitation_probability,relative_humidity_2m,visibility" +
+                "&timezone=auto&forecast_days=7";
 
             var response = await _httpClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
-            var data = JsonDocument.Parse(json);
+            using var data = JsonDocument.Parse(json);
             var root = data.RootElement;
 
             // Open-Meteo returns the resolved IANA timezone for the coordinates; prefer it
@@ -656,15 +668,89 @@ namespace SynQPanel.Extras
                     _timezone.Value = tzValue;
             }
 
+            DateTime nowLocal = DateTime.Now;
+
             if (root.TryGetProperty("current", out var current))
             {
                 ParseCurrentWeather(current);
+
+                var currentTimeStr = TryGetString(current, "time");
+                if (!string.IsNullOrEmpty(currentTimeStr)
+                    && DateTime.TryParse(currentTimeStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedNow))
+                {
+                    nowLocal = parsedNow;
+                }
             }
 
             if (root.TryGetProperty("daily", out var daily))
             {
-                ParseTodayForecast(daily);
+                ParseDailyForecast(daily);
             }
+
+            if (root.TryGetProperty("hourly", out var hourly))
+            {
+                ParseHourlyForecast(hourly, nowLocal);
+            }
+
+            UpdateMoonPhase();
+
+            // Air quality is fetched separately; a failure here must not break the
+            // main weather update (temperature/condition/etc. already succeeded above).
+            try
+            {
+                await FetchAirQualityAsync(lat, lon, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                // Best-effort: leave air-quality sensors at their previous/default values.
+            }
+        }
+
+        private async Task FetchAirQualityAsync(string lat, string lon, CancellationToken cancellationToken)
+        {
+            string url = "https://air-quality-api.open-meteo.com/v1/air-quality" +
+                $"?latitude={lat}&longitude={lon}" +
+                "&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi,european_aqi";
+
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            using var data = JsonDocument.Parse(json);
+            var root = data.RootElement;
+
+            if (!root.TryGetProperty("current", out var current))
+                return;
+
+            var pm25 = TryGetDouble(current, "pm2_5");
+            if (pm25.HasValue) _pm2_5.Value = (float)pm25.Value;
+
+            var pm10 = TryGetDouble(current, "pm10");
+            if (pm10.HasValue) _pm10.Value = (float)pm10.Value;
+
+            var co = TryGetDouble(current, "carbon_monoxide");
+            if (co.HasValue) _co.Value = (float)co.Value;
+
+            var no2 = TryGetDouble(current, "nitrogen_dioxide");
+            if (no2.HasValue) _no2.Value = (float)no2.Value;
+
+            var o3 = TryGetDouble(current, "ozone");
+            if (o3.HasValue) _o3.Value = (float)o3.Value;
+
+            var so2 = TryGetDouble(current, "sulphur_dioxide");
+            if (so2.HasValue) _so2.Value = (float)so2.Value;
+
+            var usAqi = TryGetDouble(current, "us_aqi");
+            if (usAqi.HasValue) _aqiUS.Value = (float)usAqi.Value;
+
+            // Open-Meteo does not expose a UK DEFRA index; the European AQI is the
+            // closest available equivalent and is used here as a stand-in.
+            var euAqi = TryGetDouble(current, "european_aqi");
+            if (euAqi.HasValue) _aqiUK.Value = (float)euAqi.Value;
         }
 
         private double ConvertTemp(double celsius) => _useFahrenheit ? (celsius * 9.0 / 5.0) + 32.0 : celsius;
@@ -672,68 +758,310 @@ namespace SynQPanel.Extras
         private void ParseCurrentWeather(JsonElement current)
         {
             // Temperature
-            _temperature.Value = (float)ConvertTemp(current.GetProperty("temperature_2m").GetDouble());
-            _feelsLike.Value = (float)ConvertTemp(current.GetProperty("apparent_temperature").GetDouble());
-            _dewPoint.Value = (float)ConvertTemp(current.GetProperty("dew_point_2m").GetDouble());
+            var tempC = TryGetDouble(current, "temperature_2m");
+            if (tempC.HasValue) _temperature.Value = (float)ConvertTemp(tempC.Value);
 
-            // Condition (WMO weather code -> Portuguese text)
-            int weatherCode = current.GetProperty("weather_code").GetInt32();
-            _condition.Value = GetConditionText(weatherCode);
-            _conditionCode.Value = weatherCode;
+            var feelsC = TryGetDouble(current, "apparent_temperature");
+            if (feelsC.HasValue) _feelsLike.Value = (float)ConvertTemp(feelsC.Value);
+
+            var dewC = TryGetDouble(current, "dew_point_2m");
+            if (dewC.HasValue) _dewPoint.Value = (float)ConvertTemp(dewC.Value);
+
+            // Condition (WMO weather code -> localized text)
+            var weatherCode = TryGetInt(current, "weather_code");
+            if (weatherCode.HasValue)
+            {
+                _condition.Value = GetConditionText(weatherCode.Value, _language);
+                _conditionCode.Value = weatherCode.Value;
+            }
 
             // Basic measurements
-            _isDay.Value = current.GetProperty("is_day").GetInt32();
-            _humidity.Value = (float)current.GetProperty("relative_humidity_2m").GetDouble();
-            _cloudCover.Value = (float)current.GetProperty("cloud_cover").GetDouble();
+            var isDay = TryGetInt(current, "is_day");
+            if (isDay.HasValue) _isDay.Value = isDay.Value;
+
+            var humidity = TryGetDouble(current, "relative_humidity_2m");
+            if (humidity.HasValue) _humidity.Value = (float)humidity.Value;
+
+            var cloud = TryGetDouble(current, "cloud_cover");
+            if (cloud.HasValue) _cloudCover.Value = (float)cloud.Value;
 
             // Wind
-            _windSpeed.Value = (float)current.GetProperty("wind_speed_10m").GetDouble();
-            double windDegree = current.GetProperty("wind_direction_10m").GetDouble();
-            _windDirection.Value = (float)windDegree;
-            _windDirectionText.Value = DegreesToCompass(windDegree);
-            _windGust.Value = (float)current.GetProperty("wind_gusts_10m").GetDouble();
+            var windSpeed = TryGetDouble(current, "wind_speed_10m");
+            if (windSpeed.HasValue) _windSpeed.Value = (float)windSpeed.Value;
+
+            var windDegree = TryGetDouble(current, "wind_direction_10m");
+            if (windDegree.HasValue)
+            {
+                _windDirection.Value = (float)windDegree.Value;
+                _windDirectionText.Value = DegreesToCompass(windDegree.Value);
+            }
+
+            var windGust = TryGetDouble(current, "wind_gusts_10m");
+            if (windGust.HasValue) _windGust.Value = (float)windGust.Value;
 
             // Pressure & Precipitation
-            _pressure.Value = (float)current.GetProperty("surface_pressure").GetDouble();
-            _precipitation.Value = (float)current.GetProperty("precipitation").GetDouble();
+            var pressure = TryGetDouble(current, "surface_pressure");
+            if (pressure.HasValue) _pressure.Value = (float)pressure.Value;
+
+            var precip = TryGetDouble(current, "precipitation");
+            if (precip.HasValue) _precipitation.Value = (float)precip.Value;
+
+            // UV index & visibility (current conditions)
+            var uv = TryGetDouble(current, "uv_index");
+            if (uv.HasValue) _uvIndex.Value = (float)uv.Value;
+
+            var visibilityMeters = TryGetDouble(current, "visibility");
+            if (visibilityMeters.HasValue) _visibility.Value = (float)(visibilityMeters.Value / 1000.0);
 
             // Local time (Open-Meteo returns it in the "current.time" field, ISO 8601, local to the timezone)
-            if (current.TryGetProperty("time", out var timeProp))
+            var timeStr = TryGetString(current, "time");
+            if (!string.IsNullOrEmpty(timeStr)
+                && DateTime.TryParse(timeStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
             {
-                var timeStr = timeProp.GetString();
-                if (!string.IsNullOrEmpty(timeStr) && DateTime.TryParse(timeStr, out var dt))
-                    _localTime.Value = dt.ToString("yyyy-MM-dd HH:mm");
+                _localTime.Value = dt.ToString("yyyy-MM-dd HH:mm");
             }
         }
 
-        private void ParseTodayForecast(JsonElement daily)
+        private void ParseDailyForecast(JsonElement daily)
         {
-            var maxC = TryGetArrayDouble(daily, "temperature_2m_max", 0);
-            var minC = TryGetArrayDouble(daily, "temperature_2m_min", 0);
+            // --- Today (index 0) ---
+            var maxC0 = TryGetArrayDouble(daily, "temperature_2m_max", 0);
+            var minC0 = TryGetArrayDouble(daily, "temperature_2m_min", 0);
 
-            if (maxC.HasValue)
-                _maxTemp.Value = (float)ConvertTemp(maxC.Value);
+            if (maxC0.HasValue)
+                _maxTemp.Value = (float)ConvertTemp(maxC0.Value);
 
-            if (minC.HasValue)
-                _minTemp.Value = (float)ConvertTemp(minC.Value);
+            if (minC0.HasValue)
+                _minTemp.Value = (float)ConvertTemp(minC0.Value);
 
-            if (maxC.HasValue && minC.HasValue)
-                _avgTemp.Value = (float)ConvertTemp((maxC.Value + minC.Value) / 2.0);
+            if (maxC0.HasValue && minC0.HasValue)
+                _avgTemp.Value = (float)ConvertTemp((maxC0.Value + minC0.Value) / 2.0);
 
-            var uvMax = TryGetArrayDouble(daily, "uv_index_max", 0);
-            if (uvMax.HasValue)
+            var uvMax0 = TryGetArrayDouble(daily, "uv_index_max", 0);
+            if (uvMax0.HasValue)
+                _uvIndexForecast.Value = (float)uvMax0.Value;
+
+            var maxWind0 = TryGetArrayDouble(daily, "wind_speed_10m_max", 0);
+            if (maxWind0.HasValue)
+                _maxWind.Value = (float)maxWind0.Value;
+
+            var precipSum0 = TryGetArrayDouble(daily, "precipitation_sum", 0);
+            if (precipSum0.HasValue)
+                _totalPrecipitation.Value = (float)precipSum0.Value;
+
+            var snowSum0 = TryGetArrayDouble(daily, "snowfall_sum", 0);
+            if (snowSum0.HasValue)
+                _totalSnow.Value = (float)snowSum0.Value;
+
+            var pop0 = TryGetArrayDouble(daily, "precipitation_probability_max", 0);
+            if (pop0.HasValue)
             {
-                _uvIndex.Value = (float)uvMax.Value;
-                _uvIndexForecast.Value = (float)uvMax.Value;
+                _chanceOfRain.Value = (float)pop0.Value;
+                _chanceOfSnow.Value = (snowSum0.HasValue && snowSum0.Value > 0) ? (float)pop0.Value : 0f;
             }
 
             var sunrise = TryGetArrayString(daily, "sunrise", 0);
-            if (sunrise != null && DateTime.TryParse(sunrise, out var sunriseDt))
+            if (sunrise != null && DateTime.TryParse(sunrise, CultureInfo.InvariantCulture, DateTimeStyles.None, out var sunriseDt))
                 _sunrise.Value = sunriseDt.ToString("HH:mm");
 
             var sunset = TryGetArrayString(daily, "sunset", 0);
-            if (sunset != null && DateTime.TryParse(sunset, out var sunsetDt))
+            if (sunset != null && DateTime.TryParse(sunset, CultureInfo.InvariantCulture, DateTimeStyles.None, out var sunsetDt))
                 _sunset.Value = sunsetDt.ToString("HH:mm");
+
+            // --- Tomorrow (index 1) ---
+            var tomorrowDateStr = TryGetArrayString(daily, "time", 1);
+            if (tomorrowDateStr != null && DateTime.TryParse(tomorrowDateStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var tDt))
+                _tomorrowDate.Value = tDt.ToString("yyyy-MM-dd");
+
+            var maxC1 = TryGetArrayDouble(daily, "temperature_2m_max", 1);
+            var minC1 = TryGetArrayDouble(daily, "temperature_2m_min", 1);
+
+            if (maxC1.HasValue)
+                _tomorrowMaxTemp.Value = (float)ConvertTemp(maxC1.Value);
+
+            if (minC1.HasValue)
+                _tomorrowMinTemp.Value = (float)ConvertTemp(minC1.Value);
+
+            if (maxC1.HasValue && minC1.HasValue)
+                _tomorrowAvgTemp.Value = (float)ConvertTemp((maxC1.Value + minC1.Value) / 2.0);
+
+            var code1 = TryGetArrayInt(daily, "weather_code", 1);
+            if (code1.HasValue)
+                _tomorrowCondition.Value = GetConditionText(code1.Value, _language);
+
+            var maxWind1 = TryGetArrayDouble(daily, "wind_speed_10m_max", 1);
+            if (maxWind1.HasValue)
+                _tomorrowMaxWind.Value = (float)maxWind1.Value;
+
+            var precipSum1 = TryGetArrayDouble(daily, "precipitation_sum", 1);
+            if (precipSum1.HasValue)
+                _tomorrowPrecipitation.Value = (float)precipSum1.Value;
+
+            var snowSum1 = TryGetArrayDouble(daily, "snowfall_sum", 1);
+            var pop1 = TryGetArrayDouble(daily, "precipitation_probability_max", 1);
+            if (pop1.HasValue)
+            {
+                _tomorrowChanceOfRain.Value = (float)pop1.Value;
+                _tomorrowChanceOfSnow.Value = (snowSum1.HasValue && snowSum1.Value > 0) ? (float)pop1.Value : 0f;
+            }
+
+            // --- Extended forecast (days 3-5, indices 2-4) ---
+            ApplyExtendedDay(daily, 2, _day3Date, _day3Condition, _day3AvgTemp, _day3ChanceOfRain);
+            ApplyExtendedDay(daily, 3, _day4Date, _day4Condition, _day4AvgTemp, _day4ChanceOfRain);
+            ApplyExtendedDay(daily, 4, _day5Date, _day5Condition, _day5AvgTemp, _day5ChanceOfRain);
+        }
+
+        private void ApplyExtendedDay(JsonElement daily, int index, PluginText dateText, PluginText conditionText, PluginSensor avgTemp, PluginSensor chanceOfRain)
+        {
+            var dateStr = TryGetArrayString(daily, "time", index);
+            if (dateStr != null && DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                dateText.Value = dt.ToString("yyyy-MM-dd");
+
+            var max = TryGetArrayDouble(daily, "temperature_2m_max", index);
+            var min = TryGetArrayDouble(daily, "temperature_2m_min", index);
+            if (max.HasValue && min.HasValue)
+                avgTemp.Value = (float)ConvertTemp((max.Value + min.Value) / 2.0);
+
+            var code = TryGetArrayInt(daily, "weather_code", index);
+            if (code.HasValue)
+                conditionText.Value = GetConditionText(code.Value, _language);
+
+            var pop = TryGetArrayDouble(daily, "precipitation_probability_max", index);
+            if (pop.HasValue)
+                chanceOfRain.Value = (float)pop.Value;
+        }
+
+        private void ParseHourlyForecast(JsonElement hourly, DateTime nowLocal)
+        {
+            if (!hourly.TryGetProperty("time", out var timeArr) || timeArr.ValueKind != JsonValueKind.Array)
+                return;
+
+            int len = timeArr.GetArrayLength();
+
+            // The hourly series starts at local midnight of the current day (Open-Meteo,
+            // timezone=auto), so the first 24 entries correspond to "today" - use them to
+            // compute today's forecast averages that Open-Meteo doesn't provide directly.
+            int todayCount = Math.Min(24, len);
+            if (todayCount > 0)
+            {
+                double humSum = 0; int humCount = 0;
+                double visSum = 0; int visCount = 0;
+
+                for (int i = 0; i < todayCount; i++)
+                {
+                    var h = TryGetArrayDouble(hourly, "relative_humidity_2m", i);
+                    if (h.HasValue) { humSum += h.Value; humCount++; }
+
+                    var v = TryGetArrayDouble(hourly, "visibility", i);
+                    if (v.HasValue) { visSum += v.Value; visCount++; }
+                }
+
+                if (humCount > 0)
+                    _avgHumidity.Value = (float)(humSum / humCount);
+
+                if (visCount > 0)
+                    _avgVisibility.Value = (float)((visSum / visCount) / 1000.0);
+            }
+
+            // Find the first hourly slot at/after "now" (in the location's local time).
+            int startIndex = -1;
+            for (int i = 0; i < len; i++)
+            {
+                var tStr = TryGetArrayString(hourly, "time", i);
+                if (tStr != null
+                    && DateTime.TryParse(tStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var t)
+                    && t >= nowLocal)
+                {
+                    startIndex = i;
+                    break;
+                }
+            }
+
+            if (startIndex < 0)
+                return;
+
+            var timeSlots = new[] { _hour1Time, _hour2Time, _hour3Time, _hour4Time, _hour5Time, _hour6Time };
+            var tempSlots = new[] { _hour1Temp, _hour2Temp, _hour3Temp, _hour4Temp, _hour5Temp, _hour6Temp };
+            var rainSlots = new[] { _hour1ChanceOfRain, _hour2ChanceOfRain, _hour3ChanceOfRain, _hour4ChanceOfRain, _hour5ChanceOfRain, _hour6ChanceOfRain };
+
+            for (int s = 0; s < timeSlots.Length; s++)
+            {
+                int idx = startIndex + s;
+                if (idx >= len)
+                    break;
+
+                var tStr = TryGetArrayString(hourly, "time", idx);
+                if (tStr != null && DateTime.TryParse(tStr, CultureInfo.InvariantCulture, DateTimeStyles.None, out var t))
+                    timeSlots[s].Value = t.ToString("HH:mm");
+
+                var temp = TryGetArrayDouble(hourly, "temperature_2m", idx);
+                if (temp.HasValue)
+                    tempSlots[s].Value = (float)ConvertTemp(temp.Value);
+
+                var pop = TryGetArrayDouble(hourly, "precipitation_probability", idx);
+                if (pop.HasValue)
+                    rainSlots[s].Value = (float)pop.Value;
+
+                // Note: hourN_icon_url sensors stay unpopulated - Open-Meteo provides no
+                // icon/CDN URLs (same as the current/tomorrow/day3-5 icon_url sensors),
+                // and nothing else in the codebase consumes these keys.
+            }
+        }
+
+        /// <summary>
+        /// Open-Meteo does not provide moon-phase data, so it is computed locally from
+        /// the synodic month length relative to a known new moon reference date.
+        /// Moonrise/moonset are left unpopulated (would require a full astronomical
+        /// rise/set calculation, out of scope here).
+        /// </summary>
+        private void UpdateMoonPhase()
+        {
+            var knownNewMoonUtc = new DateTime(2000, 1, 6, 18, 14, 0, DateTimeKind.Utc);
+            const double synodicMonthDays = 29.53058867;
+
+            double daysSinceNewMoon = (DateTime.UtcNow - knownNewMoonUtc).TotalDays;
+            double phase = daysSinceNewMoon / synodicMonthDays;
+            phase -= Math.Floor(phase); // normalize to [0, 1)
+
+            double illuminationPercent = (1.0 - Math.Cos(2.0 * Math.PI * phase)) / 2.0 * 100.0;
+
+            _moonIllumination.Value = (float)illuminationPercent;
+            _moonPhase.Value = GetMoonPhaseName(phase, _language);
+        }
+
+        private static string GetMoonPhaseName(double phase, string language)
+        {
+            bool pt = string.Equals(language, "pt", StringComparison.OrdinalIgnoreCase);
+
+            if (phase < 0.03 || phase >= 0.97) return pt ? "Lua Nova" : "New Moon";
+            if (phase < 0.22) return pt ? "Lua Crescente" : "Waxing Crescent";
+            if (phase < 0.28) return pt ? "Quarto Crescente" : "First Quarter";
+            if (phase < 0.47) return pt ? "Lua Crescente Gibosa" : "Waxing Gibbous";
+            if (phase < 0.53) return pt ? "Lua Cheia" : "Full Moon";
+            if (phase < 0.72) return pt ? "Lua Minguante Gibosa" : "Waning Gibbous";
+            if (phase < 0.78) return pt ? "Quarto Minguante" : "Last Quarter";
+            return pt ? "Lua Minguante" : "Waning Crescent";
+        }
+
+        private static double? TryGetDouble(JsonElement parent, string propertyName)
+        {
+            if (parent.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.Number)
+                return prop.GetDouble();
+            return null;
+        }
+
+        private static int? TryGetInt(JsonElement parent, string propertyName)
+        {
+            if (parent.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.Number)
+                return prop.GetInt32();
+            return null;
+        }
+
+        private static string? TryGetString(JsonElement parent, string propertyName)
+        {
+            if (parent.TryGetProperty(propertyName, out var prop) && prop.ValueKind == JsonValueKind.String)
+                return prop.GetString();
+            return null;
         }
 
         private static double? TryGetArrayDouble(JsonElement parent, string propertyName, int index)
@@ -744,6 +1072,18 @@ namespace SynQPanel.Extras
                 && arr[index].ValueKind == JsonValueKind.Number)
             {
                 return arr[index].GetDouble();
+            }
+            return null;
+        }
+
+        private static int? TryGetArrayInt(JsonElement parent, string propertyName, int index)
+        {
+            if (parent.TryGetProperty(propertyName, out var arr)
+                && arr.ValueKind == JsonValueKind.Array
+                && arr.GetArrayLength() > index
+                && arr[index].ValueKind == JsonValueKind.Number)
+            {
+                return arr[index].GetInt32();
             }
             return null;
         }
@@ -760,28 +1100,58 @@ namespace SynQPanel.Extras
             return null;
         }
 
-        /// <summary>Maps WMO weather codes (used by Open-Meteo) to Portuguese condition text.</summary>
-        private static string GetConditionText(int code) => code switch
+        /// <summary>Maps WMO weather codes (used by Open-Meteo) to localized condition text.</summary>
+        private static string GetConditionText(int code, string language)
         {
-            0 => "Céu limpo",
-            1 => "Predominantemente limpo",
-            2 => "Parcialmente nublado",
-            3 => "Nublado",
-            45 or 48 => "Nevoeiro",
-            51 or 53 or 55 => "Garoa",
-            56 or 57 => "Garoa congelante",
-            61 => "Chuva fraca",
-            63 => "Chuva moderada",
-            65 => "Chuva forte",
-            66 or 67 => "Chuva congelante",
-            71 or 73 or 75 => "Neve",
-            77 => "Grãos de neve",
-            80 or 81 or 82 => "Pancadas de chuva",
-            85 or 86 => "Pancadas de neve",
-            95 => "Trovoada",
-            96 or 99 => "Trovoada com granizo",
-            _ => $"Código {code}"
-        };
+            bool pt = string.Equals(language, "pt", StringComparison.OrdinalIgnoreCase);
+
+            if (pt)
+            {
+                return code switch
+                {
+                    0 => "Céu limpo",
+                    1 => "Predominantemente limpo",
+                    2 => "Parcialmente nublado",
+                    3 => "Nublado",
+                    45 or 48 => "Nevoeiro",
+                    51 or 53 or 55 => "Garoa",
+                    56 or 57 => "Garoa congelante",
+                    61 => "Chuva fraca",
+                    63 => "Chuva moderada",
+                    65 => "Chuva forte",
+                    66 or 67 => "Chuva congelante",
+                    71 or 73 or 75 => "Neve",
+                    77 => "Grãos de neve",
+                    80 or 81 or 82 => "Pancadas de chuva",
+                    85 or 86 => "Pancadas de neve",
+                    95 => "Trovoada",
+                    96 or 99 => "Trovoada com granizo",
+                    _ => $"Código {code}"
+                };
+            }
+
+            return code switch
+            {
+                0 => "Clear sky",
+                1 => "Mainly clear",
+                2 => "Partly cloudy",
+                3 => "Overcast",
+                45 or 48 => "Fog",
+                51 or 53 or 55 => "Drizzle",
+                56 or 57 => "Freezing drizzle",
+                61 => "Light rain",
+                63 => "Moderate rain",
+                65 => "Heavy rain",
+                66 or 67 => "Freezing rain",
+                71 or 73 or 75 => "Snow",
+                77 => "Snow grains",
+                80 or 81 or 82 => "Rain showers",
+                85 or 86 => "Snow showers",
+                95 => "Thunderstorm",
+                96 or 99 => "Thunderstorm with hail",
+                _ => $"Code {code}"
+            };
+        }
 
         private static string DegreesToCompass(double degrees)
         {
@@ -826,11 +1196,17 @@ namespace SynQPanel.Extras
                         case "usefahrenheit":
                             _useFahrenheit = value.ToLower() == "true" || value == "1";
                             break;
+                        case "language":
+                            _language = string.IsNullOrWhiteSpace(value) ? "pt" : value.Trim().ToLowerInvariant();
+                            break;
                     }
                 }
 
                 if (string.IsNullOrWhiteSpace(_location))
                     _location = "auto";
+
+                if (string.IsNullOrWhiteSpace(_language))
+                    _language = "pt";
             }
             catch (Exception ex)
             {
@@ -854,10 +1230,15 @@ Location=auto
 
 # Temperature Unit (true for Fahrenheit, false for Celsius)
 UseFahrenheit=false
+
+# Language for condition text, moon phase names, and geocoding results.
+# Supported: pt (Portuguese, default), en (English)
+Language=pt
 ";
 
                 File.WriteAllText(ConfigFilePath, defaultConfig);
                 _location = "auto";
+                _language = "pt";
             }
             catch (Exception ex)
             {
