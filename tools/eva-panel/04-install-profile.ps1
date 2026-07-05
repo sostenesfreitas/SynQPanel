@@ -14,11 +14,13 @@ Copy-Item (Join-Path $outDir "$GUID.xml") (Join-Path $app "profiles\$GUID.xml") 
 
 # 3) Registrar no profiles.xml (com backup)
 $profilesPath = Join-Path $app 'profiles.xml'
-Copy-Item $profilesPath "$profilesPath.eva-bak" -Force
 $xml = [xml](Get-Content $profilesPath -Raw)
 
 $existing = $xml.ArrayOfProfile.Profile | Where-Object { $_.Guid -eq $GUID }
 if ($existing) { Write-Host 'Perfil já registrado — pulando.'; exit 0 }
+
+# Backup só quando vamos realmente mutar (re-runs não tocam o .eva-bak)
+Copy-Item $profilesPath "$profilesPath.eva-bak" -Force
 
 $bgPath = Join-Path $assetDir 'eva-bg.png'
 $frag = @"
