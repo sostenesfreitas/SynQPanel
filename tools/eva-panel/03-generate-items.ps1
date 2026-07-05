@@ -63,7 +63,10 @@ function StaticText($name,$x,$y,$size,$color,$bold=$true) {
 "@
 }
 
-function SensorText($name,$x,$y,$size,$color,$id,$unit,$showUnit,$precision) {
+# $mult/$divToggle: modificadores de valor do SensorDisplayItem. Com
+# DivisionToggle=true o valor é DIVIDIDO por MultiplicationModifier
+# (SensorDisplayItem.cs) — ex.: MB -> GB com mult=1024 e divToggle=$true.
+function SensorText($name,$x,$y,$size,$color,$id,$unit,$showUnit,$precision,$mult=1,$divToggle=$false) {
     (Head 'SensorDisplayItem' $name 'Plugin' $x $y) + (TextCommon $FONT $size $true $color) + @"
     <_valueType>NOW</_valueType>
     <SensorName>$id</SensorName>
@@ -82,6 +85,10 @@ function SensorText($name,$x,$y,$size,$color,$id,$unit,$showUnit,$precision) {
     <ShowUnit>$($showUnit.ToString().ToLower())</ShowUnit>
     <OverridePrecision>true</OverridePrecision>
     <Precision>$precision</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>$mult</MultiplicationModifier>
+    <DivisionToggle>$($divToggle.ToString().ToLower())</DivisionToggle>
   </DisplayItem>
 "@
 }
@@ -168,11 +175,15 @@ function DateItem($x,$y,$size) {
 "@
 }
 
-# Célula da grade: rótulo + valor grande + sublinha + barra
-function Cell($label,$cx,$cy,$valId,$valUnit,$valPrec,$sub1Id,$sub1Unit,$barId,$barMax,$barFg) {
+# Célula da grade: rótulo + valor grande + sublinhas + barra.
+# sub2 (opcional) fica à direita da sub1, em (cx+380, cy+168).
+# valMult/valDiv (opcionais) aplicam os modificadores ao valor grande
+# (ex.: RAM em MB -> GB com valMult=1024 e valDiv=$true).
+function Cell($label,$cx,$cy,$valId,$valUnit,$valPrec,$sub1Id,$sub1Unit,$sub2Id,$sub2Unit,$barId,$barMax,$barFg,$valMult=1,$valDiv=$false) {
     $xml  = StaticText $label ($cx+28) ($cy+22) 24 $GREEN
-    $xml += SensorText "$label valor" ($cx+28) ($cy+62) 72 $WHITE $valId $valUnit $true $valPrec
+    $xml += SensorText "$label valor" ($cx+28) ($cy+62) 72 $WHITE $valId $valUnit $true $valPrec $valMult $valDiv
     if ($sub1Id) { $xml += SensorText "$label sub" ($cx+28) ($cy+168) 22 $LILAC $sub1Id $sub1Unit $true 0 }
+    if ($sub2Id) { $xml += SensorText "$label sub2" ($cx+380) ($cy+168) 22 $LILAC $sub2Id $sub2Unit $true 0 }
     if ($barId)  { $xml += Bar "$label bar" ($cx+28) ($cy+210) $barId $barMax $barFg }
     $xml
 }
@@ -190,12 +201,12 @@ $items += SensorText 'Clima temp' 1520 120 88 $WHITE '/weather/weather-current/t
 $items += SensorText 'Clima cond' 1520 270 32 $LILAC '/weather/weather-current/condition' '' $false 0
 $items += SensorText 'Clima cidade' 1520 330 24 $PURPLE '/weather/weather-location/city_name' '' $false 0
 # --- Grade 3x2 ---
-$items += Cell 'CPU'   96 480 $S.CpuTemp '°C' 1 $S.CpuClk 'MHz' $S.CpuUti 100 $GREEN
-$items += Cell 'GPU'  768 480 $S.GpuTemp '°C' 1 $S.GpuClk 'MHz' $S.GpuUti 100 $ORANGE
-$items += Cell 'RAM' 1440 480 $S.RamUsed 'MB' 0 $S.RamUti '%' $S.RamUti 100 $PURPLE
-$items += Cell 'REDE'  96 762 $S.NetDl 'KB/s' 0 $S.NetUl 'KB/s' $null 0 $null
-$items += Cell 'DISCO' 768 762 $S.DskTemp '°C' 0 $S.DskAct '%' $S.DskAct 100 $GREEN
-$items += Cell 'FPS' 1440 762 $S.Fps '' 0 $null '' $null 0 $null
+$items += Cell 'CPU'   96 480 $S.CpuTemp '°C' 1 $S.CpuClk 'MHz' $S.CpuUti '%' $S.CpuUti 100 $GREEN
+$items += Cell 'GPU'  768 480 $S.GpuTemp '°C' 1 $S.GpuClk 'MHz' $S.GpuUti '%' $S.GpuUti 100 $ORANGE
+$items += Cell 'RAM' 1440 480 $S.RamUsed 'GB' 1 $S.RamUti '%' $null '' $S.RamUti 100 $PURPLE 1024 $true
+$items += Cell 'REDE'  96 762 $S.NetDl 'KB/s' 0 $S.NetUl 'KB/s' $null '' $null 0 $null
+$items += Cell 'DISCO' 768 762 $S.DskTemp '°C' 0 $S.DskAct '%' $null '' $S.DskAct 100 $GREEN
+$items += Cell 'FPS' 1440 762 $S.Fps '' 0 $null '' $null '' $null 0 $null
 
 $doc = @"
 <?xml version="1.0" encoding="utf-8"?>
