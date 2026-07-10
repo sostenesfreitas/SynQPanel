@@ -66,6 +66,8 @@ function BgImage($file,$w,$h) {
 "@
 }
 
+# NAO trocar o default literal por $FONT: em PS, $font e $FONT sao a mesma variavel
+# (case-insensitive) — o fallback atribuiria null a si mesmo e geraria <Font></Font> vazio.
 function StaticText($name,$x,$y,$size,$color,$font='Segoe UI') {
     (Head 'TextDisplayItem' $name 'None' $x $y) + (TextCommon $font $size $color) + @"
   </DisplayItem>
