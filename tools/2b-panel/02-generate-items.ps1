@@ -151,61 +151,66 @@ $items += DateItem 280 310 36
 $items += SensorText 'Clima temp' 330 385 44 $GOLD '/weather/weather-current/temperature' '°C' $true 0
 $items += SensorText 'Clima cond' 455 392 32 $GRAY '/weather/weather-current/condition' '' $false 0
 $items += SensorText 'Clima cidade' 330 445 26 $GRAY '/weather/weather-location/city_name' '' $false 0
+# Bloco de sensores deslocado +110px verticalmente para escapar do logo
+# "NieR:Automata" da arte de fundo (y~2110-2305), que fica quase transparente
+# nessa faixa do fade inferior e derruba a legibilidade do rotulo da CPU.
+# Ver tools/2b-panel/01-generate-background.ps1 - o separador RAM/REDE
+# tambem foi deslocado +110px para acompanhar este bloco.
 # CPU
-$items += StaticText 'CPU · RYZEN 9 9950X3D' 110 2230 26 $GRAY
-$items += SensorText 'CPU temp' 110 2266 84 $DARK $S.CpuTemp '°C' $true 1 1 $false $FONTL
-$items += SensorText 'CPU clk' 110 2400 24 $GRAY $S.CpuClk 'MHz' $true 0
-$items += SensorText 'CPU uso' 430 2400 24 $GOLD $S.CpuUti '%' $true 0
-$items += SensorText 'CPU pwr' 110 2440 24 $GRAY $S.CpuPwr 'W' $true 0
-$items += SensorText 'CPU volt' 300 2440 24 $GRAY $S.CpuVolt 'V' $true 2
-$items += StaticText 'CCD1' 500 2440 24 $GOLD
-$items += SensorText 'CPU ccd' 580 2440 24 $GRAY $S.CpuCcd '°C' $true 0
-$items += Bar 'CPU bar' 110 2492 $S.CpuUti 100 $DARK
+$items += StaticText 'CPU · RYZEN 9 9950X3D' 110 2340 26 $GRAY
+$items += SensorText 'CPU temp' 110 2376 84 $DARK $S.CpuTemp '°C' $true 1 1 $false $FONTL
+$items += SensorText 'CPU clk' 110 2510 24 $GRAY $S.CpuClk 'MHz' $true 0
+$items += SensorText 'CPU uso' 430 2510 24 $GOLD $S.CpuUti '%' $true 0
+$items += SensorText 'CPU pwr' 110 2550 24 $GRAY $S.CpuPwr 'W' $true 0
+$items += SensorText 'CPU volt' 300 2550 24 $GRAY $S.CpuVolt 'V' $true 2
+$items += StaticText 'CCD1' 500 2550 24 $GOLD
+$items += SensorText 'CPU ccd' 580 2550 24 $GRAY $S.CpuCcd '°C' $true 0
+$items += Bar 'CPU bar' 110 2602 $S.CpuUti 100 $DARK
 # GPU
-$items += StaticText 'GPU · RTX 5090' 110 2540 26 $GRAY
-$items += SensorText 'GPU temp' 110 2576 84 $DARK $S.GpuTemp '°C' $true 1 1 $false $FONTL
-$items += SensorText 'GPU clk' 110 2710 24 $GRAY $S.GpuClk 'MHz' $true 0
-$items += SensorText 'GPU uso' 430 2710 24 $GOLD $S.GpuUti '%' $true 0
-$items += SensorText 'VRAM temp' 110 2750 24 $GRAY $S.VramTemp '°C' $true 0
-$items += SensorText 'GPU pwr' 300 2750 24 $GRAY $S.GpuPwr 'W' $true 0
-$items += SensorText 'GPU tdp' 480 2750 24 $GRAY $S.GpuTdp '%' $true 0
-$items += SensorText 'GPU fan' 640 2750 24 $GRAY $S.GpuFan 'RPM' $true 0
-$items += StaticText 'VRAM' 110 2790 24 $GOLD
-$items += SensorText 'VRAM usada' 210 2790 24 $GRAY $S.VramUsed 'MB' $true 0
-$items += SensorText 'VRAM clk' 480 2790 24 $GRAY $S.VramClk 'MHz' $true 0
-$items += Bar 'GPU bar' 110 2842 $S.GpuUti 100 $DARK
+$items += StaticText 'GPU · RTX 5090' 110 2650 26 $GRAY
+$items += SensorText 'GPU temp' 110 2686 84 $DARK $S.GpuTemp '°C' $true 1 1 $false $FONTL
+$items += SensorText 'GPU clk' 110 2820 24 $GRAY $S.GpuClk 'MHz' $true 0
+$items += SensorText 'GPU uso' 430 2820 24 $GOLD $S.GpuUti '%' $true 0
+$items += SensorText 'VRAM temp' 110 2860 24 $GRAY $S.VramTemp '°C' $true 0
+$items += SensorText 'GPU pwr' 300 2860 24 $GRAY $S.GpuPwr 'W' $true 0
+$items += SensorText 'GPU tdp' 480 2860 24 $GRAY $S.GpuTdp '%' $true 0
+$items += SensorText 'GPU fan' 640 2860 24 $GRAY $S.GpuFan 'RPM' $true 0
+$items += StaticText 'VRAM' 110 2900 24 $GOLD
+$items += SensorText 'VRAM usada' 210 2900 24 $GRAY $S.VramUsed 'MB' $true 0
+$items += SensorText 'VRAM clk' 480 2900 24 $GRAY $S.VramClk 'MHz' $true 0
+$items += Bar 'GPU bar' 110 2952 $S.GpuUti 100 $DARK
 # RAM
-$items += StaticText 'RAM · 64GB' 110 2890 26 $GRAY
-$items += SensorText 'RAM valor' 110 2926 84 $DARK $S.RamUsed 'GB' $true 1 1024 $true $FONTL
-$items += SensorText 'RAM uso' 110 3060 24 $GOLD $S.RamUti '%' $true 0
-$items += StaticText 'LIVRE' 260 3060 24 $GRAY
-$items += SensorText 'RAM livre' 390 3060 24 $GRAY $S.RamFree 'GB' $true 1 1024 $true
-$items += SensorText 'RAM clk' 110 3100 24 $GRAY $S.RamClk 'MHz' $true 0
-$items += StaticText 'VIRT' 400 3100 24 $GRAY
-$items += SensorText 'VIRT usada' 500 3100 24 $GRAY $S.VirtUsed 'GB' $true 1 1024 $true
-$items += Bar 'RAM bar' 110 3152 $S.RamUti 100 $DARK
+$items += StaticText 'RAM · 64GB' 110 3000 26 $GRAY
+$items += SensorText 'RAM valor' 110 3036 84 $DARK $S.RamUsed 'GB' $true 1 1024 $true $FONTL
+$items += SensorText 'RAM uso' 110 3170 24 $GOLD $S.RamUti '%' $true 0
+$items += StaticText 'LIVRE' 260 3170 24 $GRAY
+$items += SensorText 'RAM livre' 390 3170 24 $GRAY $S.RamFree 'GB' $true 1 1024 $true
+$items += SensorText 'RAM clk' 110 3210 24 $GRAY $S.RamClk 'MHz' $true 0
+$items += StaticText 'VIRT' 400 3210 24 $GRAY
+$items += SensorText 'VIRT usada' 500 3210 24 $GRAY $S.VirtUsed 'GB' $true 1 1024 $true
+$items += Bar 'RAM bar' 110 3262 $S.RamUti 100 $DARK
 # REDE
-$items += StaticText 'REDE' 110 3250 26 $GRAY
-$items += StaticText '↓' 110 3286 44 $GOLD
-$items += SensorText 'Rede dl' 160 3286 44 $DARK $S.NetDl 'MB/s' $true 1 1024 $true $FONTL
-$items += StaticText '↑' 480 3298 28 $GRAY
-$items += SensorText 'Rede ul' 530 3298 28 $GRAY $S.NetUl 'MB/s' $true 1 1024 $true
+$items += StaticText 'REDE' 110 3360 26 $GRAY
+$items += StaticText '↓' 110 3396 44 $GOLD
+$items += SensorText 'Rede dl' 160 3396 44 $DARK $S.NetDl 'MB/s' $true 1 1024 $true $FONTL
+$items += StaticText '↑' 480 3408 28 $GRAY
+$items += SensorText 'Rede ul' 530 3408 28 $GRAY $S.NetUl 'MB/s' $true 1 1024 $true
 # DISCO
-$items += StaticText 'DISCO' 110 3390 26 $GRAY
-$items += SensorText 'Disco temp' 110 3426 24 $DARK $S.DskTemp '°C' $true 0
-$items += SensorText 'Disco act' 260 3426 24 $GRAY $S.DskAct '%' $true 0
-$items += StaticText 'R' 400 3426 24 $GOLD
-$items += SensorText 'Disco r' 440 3426 24 $GRAY $S.DskRead 'MB/s' $true 1 1024 $true
-$items += StaticText 'W' 640 3426 24 $GOLD
-$items += SensorText 'Disco w' 680 3426 24 $GRAY $S.DskWrite 'MB/s' $true 1 1024 $true
+$items += StaticText 'DISCO' 110 3500 26 $GRAY
+$items += SensorText 'Disco temp' 110 3536 24 $DARK $S.DskTemp '°C' $true 0
+$items += SensorText 'Disco act' 260 3536 24 $GRAY $S.DskAct '%' $true 0
+$items += StaticText 'R' 400 3536 24 $GOLD
+$items += SensorText 'Disco r' 440 3536 24 $GRAY $S.DskRead 'MB/s' $true 1 1024 $true
+$items += StaticText 'W' 640 3536 24 $GOLD
+$items += SensorText 'Disco w' 680 3536 24 $GRAY $S.DskWrite 'MB/s' $true 1 1024 $true
 # SISTEMA
-$items += StaticText 'SISTEMA' 110 3530 26 $GRAY
-$items += StaticText 'MOBO' 110 3566 24 $GRAY
-$items += SensorText 'Mobo temp' 200 3566 24 $DARK $S.MoboTemp '°C' $true 0
-$items += StaticText 'UPTIME' 340 3566 24 $GRAY
-$items += SensorText 'Uptime' 460 3566 24 $DARK $S.Uptime '' $false 0
-$items += StaticText 'FPS' 680 3566 24 $GRAY
-$items += SensorText 'Fps' 750 3566 28 $GOLD $S.Fps '' $false 0
+$items += StaticText 'SISTEMA' 110 3640 26 $GRAY
+$items += StaticText 'MOBO' 110 3676 24 $GRAY
+$items += SensorText 'Mobo temp' 200 3676 24 $DARK $S.MoboTemp '°C' $true 0
+$items += StaticText 'UPTIME' 340 3676 24 $GRAY
+$items += SensorText 'Uptime' 460 3676 24 $DARK $S.Uptime '' $false 0
+$items += StaticText 'FPS' 680 3676 24 $GRAY
+$items += SensorText 'Fps' 750 3676 28 $GOLD $S.Fps '' $false 0
 
 $doc = @"
 <?xml version="1.0" encoding="utf-8"?>
