@@ -66,15 +66,13 @@ function BgImage($file,$w,$h) {
 "@
 }
 
-function StaticText($name,$x,$y,$size,$color,$font=$null) {
-    if (-not $font) { $font = $FONT }
+function StaticText($name,$x,$y,$size,$color,$font='Segoe UI') {
     (Head 'TextDisplayItem' $name 'None' $x $y) + (TextCommon $font $size $color) + @"
   </DisplayItem>
 "@
 }
 
-function SensorText($name,$x,$y,$size,$color,$id,$unit,$showUnit,$precision,$mult=1,$divToggle=$false,$font=$null) {
-    if (-not $font) { $font = $FONT }
+function SensorText($name,$x,$y,$size,$color,$id,$unit,$showUnit,$precision,$mult=1,$divToggle=$false,$font='Segoe UI') {
     (Head 'SensorDisplayItem' $name 'Plugin' $x $y) + (TextCommon $font $size $color) + @"
     <_valueType>NOW</_valueType>
     <SensorName>$id</SensorName>
