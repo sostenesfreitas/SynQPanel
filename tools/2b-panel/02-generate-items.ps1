@@ -5,7 +5,7 @@ New-Item -ItemType Directory -Force $outDir | Out-Null
 $GUID = '2b000001-c1ea-4001-b0e0-202607050002'
 
 $mapPath = Join-Path $outDir 'sensor-map.txt'
-if (-not (Test-Path $mapPath)) { throw 'sensor-map.txt nao encontrado' }
+if (-not (Test-Path $mapPath)) { throw 'sensor-map.txt nao encontrado - gere com tools\eva-panel\01-discover-sensors.ps1 e mapeie as 29 chaves (ver plano 2026-07-09-2b-panel.md, Task 2)' }
 $S = @{}
 foreach ($line in Get-Content $mapPath) {
     if ($line -match '^\s*([A-Za-z]+)\s*=\s*(\S+)') { $S[$Matches[1]] = $Matches[2] }
