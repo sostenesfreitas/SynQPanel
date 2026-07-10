@@ -12,7 +12,7 @@ foreach ($line in Get-Content $mapPath) {
     if ($line -match '^\s*([A-Za-z]+)\s*=\s*(\S+)') { $S[$Matches[1]] = $Matches[2] }
 }
 foreach ($k in 'CpuTemp','CpuClk','CpuUti','GpuTemp','GpuUti','GpuClk','RamUsed','RamUti','NetDl','NetUl','DskTemp','DskAct','Fps',
-               'CpuPwr','CpuVolt','CpuFan','GpuPwr','GpuFan','VramUsed','VramClk','RamFree','VirtUsed','VirtUti') {
+               'CpuPwr','CpuVolt','CpuCcd','GpuPwr','GpuFan','VramUsed','VramClk','RamFree','VirtUsed','VirtUti') {
     if (-not $S.ContainsKey($k)) { throw "sensor-map.txt sem a chave $k" }
 }
 
@@ -194,19 +194,20 @@ function Cell($label,$cx,$cy,$valId,$valUnit,$valPrec,$sub1Id,$sub1Unit,$sub2Id,
 #   rótulo cy+22 (22px) · valor grande cy+58 (56px) · linhas de detalhe
 #   cy+132 / cy+162 / cy+192 (19px) · barra cy+210 (GPU: cy+226, tem 3 linhas)
 function CpuCell($cx,$cy) {
-    $xml  = StaticText 'CPU · RYZEN 9 5900X' ($cx+28) ($cy+22) 22 $GREEN
+    $xml  = StaticText 'CPU · RYZEN 9 9950X3D' ($cx+28) ($cy+22) 22 $GREEN
     $xml += SensorText 'CPU temp' ($cx+28)  ($cy+58)  56 $WHITE $S.CpuTemp '°C' $true 1
     $xml += SensorText 'CPU clk'  ($cx+28)  ($cy+132) 19 $LILAC $S.CpuClk 'MHz' $true 0
     $xml += SensorText 'CPU uso'  ($cx+200) ($cy+132) 19 $LILAC $S.CpuUti '%'   $true 0
     $xml += SensorText 'CPU pwr'  ($cx+28)  ($cy+162) 19 $LILAC $S.CpuPwr 'W'   $true 0
     $xml += SensorText 'CPU volt' ($cx+180) ($cy+162) 19 $LILAC $S.CpuVolt 'V'  $true 2
-    $xml += SensorText 'CPU fan'  ($cx+360) ($cy+162) 19 $LILAC $S.CpuFan 'RPM' $true 0
+    $xml += StaticText 'CCD1' ($cx+360) ($cy+162) 19 $PURPLE
+    $xml += SensorText 'CPU ccd' ($cx+440) ($cy+162) 19 $LILAC $S.CpuCcd '°C' $true 0
     $xml += Bar 'CPU bar' ($cx+28) ($cy+210) $S.CpuUti 100 $GREEN
     $xml
 }
 
 function GpuCell($cx,$cy) {
-    $xml  = StaticText 'GPU · RTX 3080' ($cx+28) ($cy+22) 22 $GREEN
+    $xml  = StaticText 'GPU · RTX 5090' ($cx+28) ($cy+22) 22 $GREEN
     $xml += SensorText 'GPU temp'   ($cx+28)  ($cy+58)  56 $WHITE $S.GpuTemp '°C' $true 1
     $xml += SensorText 'GPU clk'    ($cx+28)  ($cy+132) 19 $LILAC $S.GpuClk 'MHz' $true 0
     $xml += SensorText 'GPU uso'    ($cx+200) ($cy+132) 19 $LILAC $S.GpuUti '%'   $true 0
@@ -220,7 +221,7 @@ function GpuCell($cx,$cy) {
 }
 
 function RamCell($cx,$cy) {
-    $xml  = StaticText 'RAM · 32GB' ($cx+28) ($cy+22) 22 $GREEN
+    $xml  = StaticText 'RAM · 64GB' ($cx+28) ($cy+22) 22 $GREEN
     $xml += SensorText 'RAM valor'  ($cx+28)  ($cy+58)  56 $WHITE $S.RamUsed 'GB' $true 1 1024 $true
     $xml += SensorText 'RAM uso'    ($cx+28)  ($cy+132) 19 $LILAC $S.RamUti '%' $true 0
     $xml += StaticText 'LIVRE'      ($cx+140) ($cy+132) 19 $PURPLE
