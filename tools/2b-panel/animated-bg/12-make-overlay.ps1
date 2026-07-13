@@ -1,4 +1,4 @@
-# Overlay RGBA 1100x3840: fades + separador em transparente (mesma geometria do
+﻿# Overlay RGBA 1100x3840: fades + separador em transparente (mesma geometria do
 # tools/2b-panel/01-generate-background.ps1, commit 487a098: separador em y3330)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -34,10 +34,7 @@ $blend.Positions = @(0.0, 0.55, 1.0)
 $gBot.InterpolationColors = $blend
 $g.FillRectangle($gBot, $rBot); $gBot.Dispose()
 
-# Separador RAM/REDE (y3330 pos-shift 487a098)
-$pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(38,28,28,28), 2)
-$g.DrawLine($pen, 110, 3330, 990, 3330)
-$pen.Dispose(); $g.Dispose()
+$g.Dispose()
 
 $out = Join-Path $PSScriptRoot '2b_overlay.png'
 $bmp.Save($out, [System.Drawing.Imaging.ImageFormat]::Png)

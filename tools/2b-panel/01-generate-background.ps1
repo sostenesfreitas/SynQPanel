@@ -44,12 +44,7 @@ $blend.Positions = @(0.0, 0.55, 1.0)
 $gBot.InterpolationColors = $blend
 $g.FillRectangle($gBot, $rBot); $gBot.Dispose()
 
-# Separador entre RAM e REDE
-# y deslocado +110px para acompanhar o bloco de sensores movido em
-# 02-generate-items.ps1 (fuga do logo "NieR:Automata" na arte de fundo)
-$pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(38,28,28,28), 2)
-$g.DrawLine($pen, 110, 3330, 990, 3330)
-$pen.Dispose(); $g.Dispose()
+$g.Dispose()
 
 $bmp.Save((Join-Path $outDir '2b-bg.png'), [System.Drawing.Imaging.ImageFormat]::Png)
 $bmp.Dispose()
