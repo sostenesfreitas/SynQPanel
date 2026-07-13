@@ -1,4 +1,4 @@
-{
+﻿{
     "prompt":  {
                    "37":  {
                               "class_type":  "UNETLoader",
@@ -57,7 +57,7 @@
                                                          "38",
                                                          0
                                                      ],
-                                            "text":  "A living illustration, cinemagraph style. 2B from NieR Automata holds perfectly still, frozen in her exact pose, the lollipop staying inside her mouth, gloved hands completely motionless. The ONLY movement: a few individual strands of her white hair drift almost imperceptibly in a faint breeze, and tiny bright dust motes float slowly through the air. Everything else is a still painting. Static locked camera. Extremely subtle, minimal, slow ambient motion only. Original artwork preserved exactly."
+                                            "text":  "A living illustration of 2B from NieR Automata, gentle looping animation. Her white bob hair flows and sways clearly in a soft breeze, strands lifting and settling in visible waves. The dark ribbons behind her drift softly. Bright dust motes float slowly through the air. The lollipop and her gloved hand remain PERFECTLY STILL - the candy stays firmly attached to the stick inside her mouth, the hand frozen in place, completely motionless. Her pose, face and framing stay fixed, no new accessories. Static locked camera, smooth graceful hair motion only, original anime art style preserved."
                                         }
                          },
                    "7":  {
@@ -67,7 +67,7 @@
                                                          "38",
                                                          0
                                                      ],
-                                            "text":  "headband, hairband, red band, braids, braided hair, earrings, new accessories, jewelry appearing, lollipop moving, lollipop leaving mouth, hands moving, fingers moving, pose change, head movement, camera movement, zoom, pan, morphing face, distorted text, warped logo, extra fingers, fast motion, flickering, artifacts, style change"
+                                            "text":  "lollipop moving, lollipop twirling, candy detaching from stick, candy separating, floating candy, broken lollipop, hand moving, fingers moving, headband, hairband, braids, earrings, new accessories, lollipop leaving mouth, arm changing position, pose change, head turning, camera movement, zoom, pan, morphing face, distorted text, warped logo, extra fingers, flickering, artifacts, style change"
                                         }
                          },
                    "52":  {
@@ -77,6 +77,7 @@
                                          }
                           },
                    "50":  {
+                              "class_type":  "WanImageToVideo",
                               "inputs":  {
                                              "positive":  [
                                                               "6",
@@ -97,13 +98,8 @@
                                              "start_image":  [
                                                                  "52",
                                                                  0
-                                                             ],
-                                             "end_image":  [
-                                                               "52",
-                                                               0
-                                                           ]
-                                         },
-                              "class_type":  "WanFirstLastFrameToVideo"
+                                                             ]
+                                         }
                           },
                    "3":  {
                              "class_type":  "KSamplerAdvanced",
@@ -113,7 +109,7 @@
                                                           0
                                                       ],
                                             "add_noise":  "enable",
-                                            "noise_seed":  900913,
+                                            "noise_seed":  20260713,
                                             "steps":  20,
                                             "cfg":  3.5,
                                             "sampler_name":  "euler",
@@ -195,7 +191,7 @@
                                                            "60",
                                                            0
                                                        ],
-                                             "filename_prefix":  "2b_cinemagraph_v4",
+                                             "filename_prefix":  "2b_cinemagraph",
                                              "format":  "auto",
                                              "codec":  "auto"
                                          }
