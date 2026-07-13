@@ -185,7 +185,9 @@ $items += SensorText 'RAM valor' 110 3036 84 $DARK $S.RamUsed 'GB' $true 1 1024 
 $items += SensorText 'RAM uso' 110 3170 24 $GOLD $S.RamUti '%' $true 0
 $items += StaticText 'LIVRE' 260 3170 24 $GRAY
 $items += SensorText 'RAM livre' 390 3170 24 $GRAY $S.RamFree 'GB' $true 1 1024 $true
-$items += SensorText 'RAM clk' 110 3210 24 $GRAY $S.RamClk 'MHz' $true 0
+# SMEMCLK reporta o clock REAL da memoria; exibir o efetivo DDR (x2, MT/s):
+# 3000MHz real -> 6000MT/s, como BIOS/CPU-Z/etiqueta do kit anunciam.
+$items += SensorText 'RAM clk' 110 3210 24 $GRAY $S.RamClk 'MT/s' $true 0 2 $false
 $items += StaticText 'VIRT' 400 3210 24 $GRAY
 $items += SensorText 'VIRT usada' 500 3210 24 $GRAY $S.VirtUsed 'GB' $true 1 1024 $true
 $items += Bar 'RAM bar' 110 3262 $S.RamUti 100 $DARK
