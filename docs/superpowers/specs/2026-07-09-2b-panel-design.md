@@ -28,7 +28,8 @@ fan de CPU/gabinete** (`FCPU` não existe mais — usar `TCCD1` como métrica ex
   o fade e terminam em fundo limpo.
 - **Zona do relógio** (topo, centralizada): hora `HH:mm` em fonte fina ~150px, data por
   extenso, clima (temp + condição + cidade) com destaque dourado.
-- **Coluna de sensores** (margens laterais 110px, de y≈2230 até y≈3740).
+- **Coluna de sensores** (margens laterais 110px, de y≈2340 até y≈3740 — deslocada
+  +110px na verificação para não colidir com o logo "NieR:Automata" da arte).
 
 ## Estilo
 
