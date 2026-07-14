@@ -40,3 +40,9 @@ https://huggingface.co/Comfy-Org/frame_interpolation em `models/frame_interpolat
   do palito. Melhor congelar objetos no prompt e animar cabelo/tecido/partículas.
 - **Validação visual de frames por LLM é não-confiável para deltas sutis** — os
   portões numéricos do passo 3 existem por isso.
+- **Padrão do diff revela o TIPO de movimento**: diff oscilante/estável entre frames
+  distantes = vento/tecido (bom); diff crescendo monotonicamente = zoom ou drift de
+  câmera (ruim para wallpaper — vira zoom-in/out no ping-pong).
+- **LTX-2.3 destilado (CFG=1) também ignora o negativo** e tende a zoom lento mesmo
+  com 'static camera' no positivo; nos nossos testes o Wan 2.2 full-quality entregou
+  vento oscilante de verdade e venceu (receita deste README).
