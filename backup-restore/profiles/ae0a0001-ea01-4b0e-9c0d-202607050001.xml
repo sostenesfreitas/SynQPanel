@@ -1,0 +1,1730 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfDisplayItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <DisplayItem xsi:type="ImageDisplayItem">
+    <Name>eva-bg.png</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>0</X>
+    <Y>0</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Type>FILE</Type>
+    <ReadOnly>false</ReadOnly>
+    <FilePath>eva-bg.png</FilePath>
+    <RelativePath>true</RelativePath>
+    <Cache>true</Cache>
+    <Scale>100</Scale>
+    <Layer>false</Layer>
+    <LayerColor>#77FFFFFF</LayerColor>
+    <ShowPanel>false</ShowPanel>
+    <Volume>0</Volume>
+    <Width>3840</Width>
+    <Height>1100</Height>
+  </DisplayItem>
+  <DisplayItem xsi:type="FlipDisplayItem">
+    <Name>Flip HH</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>820</X>
+    <Y>110</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Width>210</Width>
+    <Height>270</Height>
+    <ImageFolder>flip-digits</ImageFolder>
+    <FlipStyle>SplitFlap</FlipStyle>
+    <DigitSpacing>6</DigitSpacing>
+    <PreviewValue>0</PreviewValue>
+    <DigitCount>2</DigitCount>
+    <FlipProgress>0</FlipProgress>
+    <ResolvedFlipProgress>0</ResolvedFlipProgress>
+    <AnimationDuration>0.6</AnimationDuration>
+    <ShadowIntensity>0.7</ShadowIntensity>
+    <LightingIntensity>0.4</LightingIntensity>
+    <TimeUnit>Hour24</TimeUnit>
+  </DisplayItem>
+  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>:</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1042</X>
+    <Y>140</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>120</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8E621</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>
+  <DisplayItem xsi:type="FlipDisplayItem">
+    <Name>Flip MM</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1090</X>
+    <Y>110</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Width>210</Width>
+    <Height>270</Height>
+    <ImageFolder>flip-digits</ImageFolder>
+    <FlipStyle>SplitFlap</FlipStyle>
+    <DigitSpacing>6</DigitSpacing>
+    <PreviewValue>0</PreviewValue>
+    <DigitCount>2</DigitCount>
+    <FlipProgress>0</FlipProgress>
+    <ResolvedFlipProgress>0</ResolvedFlipProgress>
+    <AnimationDuration>0.6</AnimationDuration>
+    <ShadowIntensity>0.7</ShadowIntensity>
+    <LightingIntensity>0.4</LightingIntensity>
+    <TimeUnit>Minute</TimeUnit>
+  </DisplayItem>
+  <DisplayItem xsi:type="CalendarDisplayItem">
+    <Name>Data</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>820</X>
+    <Y>400</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>34</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>true</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <Format>dddd · dd MMM yyyy</Format>
+  </DisplayItem>
+  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>Clima temp</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1520</X>
+    <Y>120</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>88</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#FFFFFF</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>/weather/weather-current/temperature</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>/weather/weather-current/temperature</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>°C</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>
+  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>Clima cond</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1520</X>
+    <Y>270</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>32</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>/weather/weather-current/condition</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>/weather/weather-current/condition</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit></Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>false</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>
+  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>Clima cidade</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1520</X>
+    <Y>330</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>24</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#8A63D2</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>/weather/weather-location/city_name</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>/weather/weather-location/city_name</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit></Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>false</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>
+  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>CPU · RYZEN 9 9950X3D</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>124</X>
+    <Y>502</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>22</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8E621</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>CPU temp</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>124</X>
+    <Y>538</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>56</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#FFFFFF</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>TCPU</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>TCPU</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>°C</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>1</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>CPU clk</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>124</X>
+    <Y>612</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SCPUCLK</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SCPUCLK</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>MHz</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>CPU uso</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>296</X>
+    <Y>612</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SCPUUTI</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SCPUUTI</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>%</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>CPU pwr</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>124</X>
+    <Y>642</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>PCPUPKG</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>PCPUPKG</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>W</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>CPU volt</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>276</X>
+    <Y>642</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>VCPU</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>VCPU</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>V</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>2</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>CCD1</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>456</X>
+    <Y>642</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#8A63D2</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>CPU ccd</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>536</X>
+    <Y>642</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>TCCD1</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>TCCD1</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>°C</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="BarDisplayItem">
+    <Name>CPU bar</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>124</X>
+    <Y>690</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <_valueType>NOW</_valueType>
+    <SensorName>SCPUUTI</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SCPUUTI</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <MinValue>0</MinValue>
+    <MaxValue>100</MaxValue>
+    <AutoValue>false</AutoValue>
+    <Width>584</Width>
+    <Height>12</Height>
+    <FlipX>false</FlipX>
+    <Frame>false</Frame>
+    <FrameColor>#666666</FrameColor>
+    <Background>true</Background>
+    <BackgroundColor>#1A1F35</BackgroundColor>
+    <Color>#B8E621</Color>
+    <Gradient>false</Gradient>
+    <GradientColor>#333333</GradientColor>
+    <CornerRadius>6</CornerRadius>
+  </DisplayItem>
+  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>GPU · RTX 5090</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>502</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>22</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8E621</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>GPU temp</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>538</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>56</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#FFFFFF</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>TGPU1</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>TGPU1</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>°C</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>1</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>GPU clk</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>612</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SGPU1CLK</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SGPU1CLK</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>MHz</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>GPU uso</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>968</X>
+    <Y>612</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SGPU1UTI</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SGPU1UTI</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>%</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>GPU pwr</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>642</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>PGPU1</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>PGPU1</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>W</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>GPU fan</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>948</X>
+    <Y>642</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>FGPU1</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>FGPU1</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>RPM</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>VRAM</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>672</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#8A63D2</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>VRAM usada</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>868</X>
+    <Y>672</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SUSEDVMEM</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SUSEDVMEM</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>MB</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>VRAM clk</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1048</X>
+    <Y>672</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SGPU1MEMCLK</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SGPU1MEMCLK</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>MHz</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="BarDisplayItem">
+    <Name>GPU bar</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>706</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <_valueType>NOW</_valueType>
+    <SensorName>SGPU1UTI</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SGPU1UTI</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <MinValue>0</MinValue>
+    <MaxValue>100</MaxValue>
+    <AutoValue>false</AutoValue>
+    <Width>584</Width>
+    <Height>12</Height>
+    <FlipX>false</FlipX>
+    <Frame>false</Frame>
+    <FrameColor>#666666</FrameColor>
+    <Background>true</Background>
+    <BackgroundColor>#1A1F35</BackgroundColor>
+    <Color>#FF7A1A</Color>
+    <Gradient>false</Gradient>
+    <GradientColor>#333333</GradientColor>
+    <CornerRadius>6</CornerRadius>
+  </DisplayItem>
+  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>RAM · 64GB</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1468</X>
+    <Y>502</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>22</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8E621</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>RAM valor</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1468</X>
+    <Y>538</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>56</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#FFFFFF</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SUSEDMEM</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SUSEDMEM</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>GB</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>1</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1024</MultiplicationModifier>
+    <DivisionToggle>true</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>RAM uso</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1468</X>
+    <Y>612</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SMEMUTI</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SMEMUTI</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>%</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>LIVRE</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1580</X>
+    <Y>612</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#8A63D2</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>RAM livre</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1670</X>
+    <Y>612</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SFREEMEM</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SFREEMEM</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>GB</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>1</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1024</MultiplicationModifier>
+    <DivisionToggle>true</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>VIRT</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1468</X>
+    <Y>642</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#8A63D2</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>VIRT usada</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1540</X>
+    <Y>642</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SUSEDVIRTMEM</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SUSEDVIRTMEM</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>GB</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>1</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1024</MultiplicationModifier>
+    <DivisionToggle>true</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>VIRT uso</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1690</X>
+    <Y>642</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>19</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SVIRTMEMUTI</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SVIRTMEMUTI</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>%</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="BarDisplayItem">
+    <Name>RAM bar</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1468</X>
+    <Y>690</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <_valueType>NOW</_valueType>
+    <SensorName>SMEMUTI</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SMEMUTI</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <MinValue>0</MinValue>
+    <MaxValue>100</MaxValue>
+    <AutoValue>false</AutoValue>
+    <Width>584</Width>
+    <Height>12</Height>
+    <FlipX>false</FlipX>
+    <Frame>false</Frame>
+    <FrameColor>#666666</FrameColor>
+    <Background>true</Background>
+    <BackgroundColor>#1A1F35</BackgroundColor>
+    <Color>#8A63D2</Color>
+    <Gradient>false</Gradient>
+    <GradientColor>#333333</GradientColor>
+    <CornerRadius>6</CornerRadius>
+  </DisplayItem>
+  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>REDE</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>124</X>
+    <Y>784</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>24</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8E621</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>REDE valor</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>124</X>
+    <Y>824</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>72</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#FFFFFF</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SNIC2DLRATE</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SNIC2DLRATE</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>MB/s</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>1</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1024</MultiplicationModifier>
+    <DivisionToggle>true</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>REDE sub</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>124</X>
+    <Y>930</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>22</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SNIC2ULRATE</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SNIC2ULRATE</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>MB/s</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>1</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1024</MultiplicationModifier>
+    <DivisionToggle>true</DivisionToggle>
+  </DisplayItem>
+  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>DISCO</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>784</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>24</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8E621</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>DISCO valor</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>824</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>72</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#FFFFFF</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>THDD1</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>THDD1</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>°C</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>DISCO sub</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>930</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>22</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8A6F0</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SDSK1ACT</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SDSK1ACT</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit>%</Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>  <DisplayItem xsi:type="BarDisplayItem">
+    <Name>DISCO bar</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>796</X>
+    <Y>972</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <_valueType>NOW</_valueType>
+    <SensorName>SDSK1ACT</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SDSK1ACT</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <MinValue>0</MinValue>
+    <MaxValue>100</MaxValue>
+    <AutoValue>false</AutoValue>
+    <Width>584</Width>
+    <Height>12</Height>
+    <FlipX>false</FlipX>
+    <Frame>false</Frame>
+    <FrameColor>#666666</FrameColor>
+    <Background>true</Background>
+    <BackgroundColor>#1A1F35</BackgroundColor>
+    <Color>#B8E621</Color>
+    <Gradient>false</Gradient>
+    <GradientColor>#333333</GradientColor>
+    <CornerRadius>6</CornerRadius>
+  </DisplayItem>
+  <DisplayItem xsi:type="TextDisplayItem">
+    <Name>FPS</Name>
+    <SensorType>None</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1468</X>
+    <Y>784</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>24</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#B8E621</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>  </DisplayItem>  <DisplayItem xsi:type="SensorDisplayItem">
+    <Name>FPS valor</Name>
+    <SensorType>Plugin</SensorType>
+    <Hidden>false</Hidden>
+    <OriginalLineIndex xsi:nil="true" />
+    <X>1468</X>
+    <Y>824</Y>
+    <IsLocked>false</IsLocked>
+    <Rotation>0</Rotation>    <Font>Consolas</Font>
+    <FontSize>72</FontSize>
+    <Bold>true</Bold>
+    <Italic>false</Italic>
+    <Underline>false</Underline>
+    <Strikeout>false</Strikeout>
+    <Color>#FFFFFF</Color>
+    <Uppercase>false</Uppercase>
+    <FontWeight />
+    <FontStyle />
+    <RightAlign>false</RightAlign>
+    <CenterAlign>false</CenterAlign>
+    <Wrap>false</Wrap>
+    <Ellipsis>false</Ellipsis>
+    <Width>0</Width>
+    <Height>0</Height>
+    <Marquee>false</Marquee>
+    <MarqueeSpeed>50</MarqueeSpeed>
+    <MarqueeSpacing>40</MarqueeSpacing>    <_valueType>NOW</_valueType>
+    <SensorName>SRTSSFPS</SensorName>
+    <Id>0</Id>
+    <Instance>0</Instance>
+    <EntryId>0</EntryId>
+    <PluginSensorId>SRTSSFPS</PluginSensorId>
+    <ValueType>NOW</ValueType>
+    <Threshold1>0</Threshold1>
+    <Threshold1Color>#000000</Threshold1Color>
+    <Threshold2>0</Threshold2>
+    <Threshold2Color>#000000</Threshold2Color>
+    <ShowName>false</ShowName>
+    <Unit></Unit>
+    <OverrideUnit>true</OverrideUnit>
+    <ShowUnit>true</ShowUnit>
+    <OverridePrecision>true</OverridePrecision>
+    <Precision>0</Precision>
+    <AdditionModifier>0</AdditionModifier>
+    <AbsoluteAddition>true</AbsoluteAddition>
+    <MultiplicationModifier>1</MultiplicationModifier>
+    <DivisionToggle>false</DivisionToggle>
+  </DisplayItem>
+</ArrayOfDisplayItem>
